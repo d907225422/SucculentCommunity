@@ -1,0 +1,575 @@
+﻿@using System.Text.RegularExpressions
+@model SucculentCommunity.Models.Post
+
+@{
+    ViewData["Title"] = Model.PostTitle;
+
+    // 🌟 從後端接住按讚與收藏的狀態
+    bool isLikedByMe = ViewData["IsLikedByMe"] as bool? ?? false;
+    bool isFavoritedByMe = ViewData["IsFavoritedByMe"] as bool? ?? false;
+    int likeCount = Model.PostLikes?.Count ?? 0;
+    int commentCount = Model.Comments?.Count ?? 0;
+
+    // 🌟 正則表達式魔法：抓出所有 #開頭的標籤，並從原文字中剔除
+    string rawContent = Model.PostContent ?? "";
+    var tagRegex = new Regex(@"#\S+");
+    var tags = tagRegex.Matches(rawContent).Select(m => m.Value).ToList();
+    var cleanContent = tagRegex.Replace(rawContent, "").Trim();
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a href="#" class="btn btn-sm btn-light rounded-pill px-3 text-muted fw-bold shadow-sm smart-back-btn" data-fallback="/Home/Index">
+                    ⬅️ 返回上一頁
+                </a>
+
+                @if (User.Identity.IsAuthenticated && User.Identity.Name == Model.Member.Account)
+                {
+                    <div class="d-flex gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.PostID" class="btn btn-sm btn-outline-theme rounded-pill px-3 fw-bold shadow-sm">
+                            ✏️ 編輯
+                        </a>
+                        <form asp-action="Delete" asp-route-id="@Model.PostID" method="post" onsubmit="return confirm('⚠️ 確定要刪除這篇貼文嗎？');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold shadow-sm">
+                                🗑️ 刪除
+                            </button>
+                        </form>
+                    </div>
+                }
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 mb-4" style="background-color: #FAFAFA;">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="d-flex align-items-center mb-4">
+                        @{
+                            var avatar = string.IsNullOrEmpty(Model.Member.Avatar) ? "default.jpg" : Model.Member.Avatar;
+                        }
+                        <img src="~/images/avatars/@avatar" class="rounded-circle shadow-sm me-3" style="width: 55px; height: 55px; object-fit: cover; border: 3px solid #E6F2F2;" />
+                        <div>
+                            <h5 class="fw-bold mb-0" style="color: #5C8A8A;">@Model.Member.Nickname</h5>
+                            <small class="text-muted">@Model.CreatedTime.ToString("yyyy/MM/dd HH:mm") 發佈</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        @if (Model.PostType == "1")
+                        {
+                            <span class="badge rounded-pill bg-warning text-dark shadow-sm px-3 py-2 me-2">❓ 舉手發問</span>
+                        }
+                        else if (Model.PostType == "2")
+                        {
+                            <span class="badge rounded-pill shadow-sm px-3 py-2 me-2" style="background-color: #B8D8BA; color: #fff;">📖 多肉日誌</span>
+                        }
+                        else if (Model.PostType == "3")
+                        {
+                            <span class="badge rounded-pill bg-info text-white shadow-sm px-3 py-2 me-2">✨ 養護心得</span>
+                        }
+
+                        @if (Model.Plant != null)
+                        {
+                            <span class="badge rounded-pill bg-white text-secondary border shadow-sm px-3 py-2">
+                                🌱 @Model.Plant.PlantNickname
+                            </span>
+                        }
+                    </div>
+
+                    <h3 class="fw-bold mb-4" style="color: #4A6B6B;">@Model.PostTitle</h3>
+
+                    <p class="fs-5 text-secondary" style="line-height: 1.8; white-space: pre-wrap;">@cleanContent</p>
+
+                    @if (!string.IsNullOrEmpty(Model.PostImage))
+                    {
+                        <div class="text-center mt-4">
+                            <img src="~/images/posts/@Model.PostImage" class="img-fluid rounded-4 shadow" style="max-height: 500px; object-fit: contain;" alt="貼文照片" />
+                        </div>
+                    }
+
+                    @if (tags.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            @foreach (var tag in tags)
+                            {
+                                <span class="badge rounded-pill shadow-sm fs-6 px-3 py-2" style="background-color: #F0F8FF; color: #5C8A8A; border: 1px solid #B8D8BA;">@tag</span>
+                            }
+                        </div>
+                    }
+
+                    <hr class="text-muted opacity-25 my-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button id="likeBtn" class="btn btn-light rounded-pill px-3 fw-bold shadow-sm" data-post-id="@Model.PostID" style="transition: transform 0.1s;">
+                                <span id="likeIcon">@(isLikedByMe ? "❤️" : "🤍")</span>
+                                <span id="likeCount" class="ms-1">@likeCount</span>
+                            </button>
+
+                            <span class="btn btn-light rounded-pill px-3 fw-bold shadow-sm ms-2 disabled" style="opacity: 1;">
+                                💬 <span id="commentCountText">@commentCount</span>
+                            </span>
+                        </div>
+
+                        <button id="favoriteBtn" class="btn rounded-pill px-3 fw-bold shadow-sm transition-all" data-post-id="@Model.PostID"
+                                style="background-color: @(isFavoritedByMe ? "#FFBD9D" : "#fff");
+                                       color: @(isFavoritedByMe ? "#fff" : "#FFBD9D");
+                                       border: 2px solid #FFBD9D;">
+                            <span id="favoriteIcon">@(isFavoritedByMe ? "🔖 已收藏" : "⭐ 收藏")</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                @if (ViewBag.PrevId != null)
+                {
+                    <a href="/Posts/Details/@ViewBag.PrevId" class="btn bg-white text-secondary rounded-pill px-4 py-2 shadow-sm fw-bold border-0" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateX(-5px)'" onmouseout="this.style.transform='translateX(0)'">
+                        ⬅️ 上一篇
+                    </a>
+                }
+                else
+                {
+                    <div style="width: 100px;"></div>
+                }
+
+                @if (ViewBag.NextId != null)
+                {
+                    <a href="/Posts/Details/@ViewBag.NextId" class="btn bg-white text-secondary rounded-pill px-4 py-2 shadow-sm fw-bold border-0" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
+                        下一篇 ➡️
+                    </a>
+                }
+                else
+                {
+                    <div style="width: 100px;"></div>
+                }
+            </div>
+
+            <div id="comment-section" class="card shadow-sm border-0 rounded-4" style="background-color: #FAFAFA;">
+
+            <div id="comment-section" class="card shadow-sm border-0 rounded-4" style="background-color: #FAFAFA;">
+                <div class="card-body p-4 p-md-5">
+                    <h5 class="fw-bold mb-4" style="color: #5C8A8A;">💬 園丁留言板</h5>
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <form id="addCommentForm" action="/Posts/AddComment" method="post" enctype="multipart/form-data" class="mb-5">
+                            <input type="hidden" name="postId" value="@Model.PostID" />
+                            @Html.AntiForgeryToken()
+                            <div class="d-flex gap-3">
+                                <div class="flex-grow-1 bg-white p-3 rounded-4 shadow-sm border border-light">
+                                    <textarea name="commentContent" class="form-control border-0 shadow-none p-0 mb-2" rows="1" placeholder="寫下你的溫暖留言或鼓勵吧..." required style="resize: none; overflow: hidden;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+
+                                    <div class="position-relative d-inline-block">
+                                        <img id="addCommentPreview" class="img-fluid rounded-3 mb-3 d-none shadow-sm" style="max-height: 150px; object-fit: contain;" />
+                                        <button type="button" id="removeAddImgBtn" class="btn btn-sm btn-dark rounded-circle position-absolute top-0 start-100 translate-middle d-none" style="width: 24px; height: 24px; padding: 0; line-height: 1;" onclick="clearAddImage()">✕</button>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-1">
+                                        <div>
+                                            <label for="uploadImage" class="btn btn-sm btn-light rounded-pill px-3 text-secondary fw-bold shadow-sm mb-0" style="cursor: pointer;">
+                                                📷 附上照片
+                                            </label>
+                                            <input type="file" id="uploadImage" name="uploadImage" class="d-none" accept="image/*" onchange="previewImage(this, 'addCommentPreview', 'removeAddImgBtn')" />
+                                        </div>
+                                        <button type="submit" class="btn btn-sm rounded-pill px-4 text-white fw-bold shadow-sm" style="background-color: #B8D8BA;">發佈留言</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="text-center bg-light p-4 rounded-4 mb-5 border border-dashed">
+                            <p class="text-muted fw-bold mb-2">想要參與討論嗎？</p>
+                            <a href="/Members/Login?returnUrl=/Posts/Details/@Model.PostID%23comment-section" class="btn btn-sm rounded-pill px-4 fw-bold text-white shadow-sm" style="background-color: #5C8A8A;">登入後即可留言</a>
+                        </div>
+                    }
+
+                    <div class="comment-list" id="commentListContainer">
+                        @if (!Model.Comments.Any())
+                        {
+                            <div class="text-center py-5 text-muted" id="emptyCommentMsg">
+                                <h6>目前還沒有人留言喔...</h6>
+                                <p class="small">快來成為第一個留下溫暖足跡的園丁吧！ 🌱</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var comment in Model.Comments.OrderByDescending(c => c.CommentTime))
+                            {
+                                var cAvatar = string.IsNullOrEmpty(comment.Member.Avatar) ? "default.jpg" : comment.Member.Avatar;
+                                <div class="d-flex gap-3 mb-4" id="comment-box-@comment.CommentID">
+                                    <img src="~/images/avatars/@cAvatar" class="rounded-circle shadow-sm" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #fff;" />
+
+                                    <div class="flex-grow-1 bg-white p-3 rounded-4 shadow-sm border-0 position-relative">
+                                        <div style="position: absolute; top: 15px; left: -8px; width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 8px solid #fff;"></div>
+
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <span class="fw-bold me-2" style="color: #5C8A8A; font-size: 0.95rem;">@comment.Member.Nickname</span>
+                                                <span class="text-muted" style="font-size: 0.8rem;">@comment.CommentTime.ToString("yyyy/MM/dd HH:mm")</span>
+                                            </div>
+
+                                            @if (User.Identity.IsAuthenticated && User.Identity.Name == comment.Member.Account)
+                                            {
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-link text-muted text-decoration-none p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <span style="font-size: 1.2rem; line-height: 1;">⋮</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                                        <li>
+                                                            <button class="dropdown-item small text-secondary fw-bold" onclick="openEditModal(@comment.CommentID, '@comment.PostID', `@comment.CommentContent`, '@comment.CommentImage')">
+                                                                ✏️ 編輯留言
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <form onsubmit="return submitDeleteComment(event, this, @comment.CommentID);" action="/Posts/DeleteComment">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="commentId" value="@comment.CommentID" />
+                                                                <input type="hidden" name="postId" value="@comment.PostID" />
+                                                                <button type="submit" class="dropdown-item small text-danger fw-bold">🗑️ 刪除留言</button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <p id="comment-content-@comment.CommentID" class="mb-2 text-secondary" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6;">@comment.CommentContent</p>
+
+                                        <div id="comment-img-wrapper-@comment.CommentID">
+                                            @if (!string.IsNullOrEmpty(comment.CommentImage))
+                                            {
+                                                <img src="~/images/comments/@comment.CommentImage" class="img-fluid rounded-3 shadow-sm mt-2" style="max-height: 200px; object-fit: contain;" alt="留言照片" />
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCommentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" style="color: #5C8A8A;">✏️ 編輯留言</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editCommentForm" action="/Posts/EditComment" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-body pb-0">
+                    <input type="hidden" name="commentId" id="editCommentId" />
+                    <input type="hidden" name="postId" id="editPostId" />
+                    <input type="hidden" name="removeImageFlag" id="removeImageFlag" value="N" />
+
+                    <textarea name="editContent" id="editContentText" class="form-control rounded-3 border bg-light shadow-sm p-3 mb-3" rows="2" required style="resize: none; overflow: hidden;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+
+                    <div class="position-relative d-inline-block">
+                        <img id="editCommentPreview" class="img-fluid rounded-3 mb-3 d-none shadow-sm" style="max-height: 150px; object-fit: contain;" />
+                        <button type="button" id="removeEditImgBtn" class="btn btn-sm btn-dark rounded-circle position-absolute top-0 start-100 translate-middle d-none" style="width: 24px; height: 24px; padding: 0; line-height: 1;" onclick="clearEditImage()">✕</button>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 justify-content-between">
+                    <div>
+                        <label for="editUploadImage" class="btn btn-sm btn-light rounded-pill px-3 text-secondary fw-bold shadow-sm mb-0" style="cursor: pointer;">
+                            📷 更換/新增照片
+                        </label>
+                        <input type="file" id="editUploadImage" name="editUploadImage" class="d-none" accept="image/*" onchange="previewImage(this, 'editCommentPreview', 'removeEditImgBtn')" />
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-light rounded-pill px-3 fw-bold shadow-sm" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn rounded-pill px-4 text-white fw-bold shadow-sm" style="background-color: #5C8A8A;">儲存修改</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 🌟 專屬主題色編輯按鈕樣式 (滑鼠移入填滿) */
+    .btn-outline-theme {
+        color: #5C8A8A;
+        border: 1px solid #5C8A8A;
+        background-color: #fff;
+    }
+
+        .btn-outline-theme:hover {
+            color: #fff;
+            background-color: #5C8A8A;
+        }
+
+    /* 確保所有帶有 transition-all 的按鈕過場都順滑 */
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+</style>
+
+@section Scripts {
+        <script>
+            // 🌟 第一道防線：用 Razor 將後端的「登入狀態」傳遞給前端 JavaScript
+            const isAuthenticated = @(User.Identity.IsAuthenticated ? "true" : "false");
+
+            function showToast(message, isSuccess = true) {
+                const alertBox = document.createElement('div');
+                alertBox.className = `alert alert-${isSuccess ? 'success' : 'danger'} rounded-pill text-center py-2 px-4 fw-bold shadow`;
+                alertBox.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; transition: opacity 0.5s ease;';
+                alertBox.innerText = message;
+                document.body.appendChild(alertBox);
+                setTimeout(() => {
+                    alertBox.style.opacity = "0";
+                    setTimeout(() => alertBox.remove(), 500);
+                }, 3000);
+            }
+
+            const addForm = document.getElementById('addCommentForm');
+            if(addForm) {
+                addForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const btn = this.querySelector('button[type="submit"]');
+                    const originalText = btn.innerText;
+                    btn.innerText = '⏳ 發佈中...';
+                    btn.disabled = true;
+
+                    fetch(this.action, { method: 'POST', body: new FormData(this) })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.success) {
+                            showToast(data.message, true);
+                            clearAddImage();
+                            this.reset();
+                            this.querySelector('textarea').style.height = '';
+
+                            const emptyMsg = document.getElementById('emptyCommentMsg');
+                            if(emptyMsg) emptyMsg.remove();
+
+                            let imgHtml = data.imageUrl ? `<img src="/images/comments/${data.imageUrl}" class="img-fluid rounded-3 shadow-sm mt-2" style="max-height: 200px; object-fit: contain;" alt="留言照片" />` : '';
+                            const newCommentHtml = `
+                            <div class="d-flex gap-3 mb-4" id="comment-box-${data.commentId}">
+                                <img src="/images/avatars/${data.avatar}" class="rounded-circle shadow-sm" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #fff;" />
+                                <div class="flex-grow-1 bg-white p-3 rounded-4 shadow-sm border-0 position-relative">
+                                    <div style="position: absolute; top: 15px; left: -8px; width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 8px solid #fff;"></div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <span class="fw-bold me-2" style="color: #5C8A8A; font-size: 0.95rem;">${data.nickname}</span>
+                                            <span class="text-muted" style="font-size: 0.8rem;">${data.time}</span>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-link text-muted text-decoration-none p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span style="font-size: 1.2rem; line-height: 1;">⋮</span></button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                                <li><button class="dropdown-item small text-secondary fw-bold" onclick="openEditModal(${data.commentId}, '${document.querySelector('[name=postId]').value}', \`${data.content}\`, '${data.imageUrl || ''}')">✏️ 編輯留言</button></li>
+                                                <li>
+                                                    <form onsubmit="return submitDeleteComment(event, this, ${data.commentId});" action="/Posts/DeleteComment">
+                                                        <input type="hidden" name="__RequestVerificationToken" value="${this.querySelector('[name=__RequestVerificationToken]').value}" />
+                                                        <input type="hidden" name="commentId" value="${data.commentId}" />
+                                                        <input type="hidden" name="postId" value="${document.querySelector('[name=postId]').value}" />
+                                                        <button type="submit" class="dropdown-item small text-danger fw-bold">🗑️ 刪除留言</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <p id="comment-content-${data.commentId}" class="mb-2 text-secondary" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6;">${data.content}</p>
+                                    <div id="comment-img-wrapper-${data.commentId}">${imgHtml}</div>
+                                </div>
+                            </div>`;
+
+                            document.getElementById('commentListContainer').insertAdjacentHTML('afterbegin', newCommentHtml);
+                            let countEl = document.getElementById('commentCountText');
+                            countEl.innerText = parseInt(countEl.innerText) + 1;
+                        } else {
+                            showToast(data.message, false);
+                        }
+                    })
+                    .finally(() => { btn.innerText = originalText; btn.disabled = false; });
+                });
+            }
+
+            document.getElementById('editCommentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                const originalText = btn.innerText;
+                btn.innerText = '⏳ 儲存中...';
+                btn.disabled = true;
+                fetch(this.action, { method: 'POST', body: new FormData(this) })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        showToast(data.message, true);
+                        document.getElementById(`comment-content-${data.commentId}`).innerText = data.content;
+                        const imgWrapper = document.getElementById(`comment-img-wrapper-${data.commentId}`);
+                        imgWrapper.innerHTML = data.imageUrl ? `<img src="/images/comments/${data.imageUrl}" class="img-fluid rounded-3 shadow-sm mt-2" style="max-height: 200px; object-fit: contain;" alt="留言照片" />` : '';
+                        var editModal = bootstrap.Modal.getInstance(document.getElementById('editCommentModal'));
+                        editModal.hide();
+                    } else {
+                        showToast(data.message, false);
+                    }
+                })
+                .finally(() => { btn.innerText = originalText; btn.disabled = false; });
+            });
+
+            function submitDeleteComment(e, form, commentId) {
+                e.preventDefault();
+                if(!confirm('確定要刪除這則留言嗎？')) return false;
+                fetch(form.action, { method: 'POST', body: new FormData(form) })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        showToast(data.message, true);
+                        const box = document.getElementById(`comment-box-${commentId}`);
+                        box.style.transition = "transform 0.3s, opacity 0.3s";
+                        box.style.transform = "scale(0.9)";
+                        box.style.opacity = "0";
+                        setTimeout(() => box.remove(), 300);
+                        let countEl = document.getElementById('commentCountText');
+                        countEl.innerText = parseInt(countEl.innerText) - 1;
+                    } else {
+                        showToast(data.message, false);
+                    }
+                });
+                return false;
+            }
+
+            // ==========================================
+            // 🌟 AJAX 無痕：按讚 / 收回讚 (新增訪客防呆)
+            // ==========================================
+            document.getElementById('likeBtn').addEventListener('click', function() {
+                // 🌟 防呆攔截：沒登入就擋下來
+                if (!isAuthenticated) {
+                    alert("💡 請先登入才能按讚給予鼓勵喔！");
+                    window.location.href = '/Members/Login';
+                    return;
+                }
+
+                const postId = this.getAttribute('data-post-id');
+                const btn = this;
+                btn.style.transform = "scale(0.9)";
+                setTimeout(() => btn.style.transform = "scale(1)", 150);
+
+                fetch(`/Posts/ToggleLike?postId=${postId}`, { method: 'POST' })
+                .then(res => {
+                    if (res.redirected) { window.location.href = '/Members/Login'; throw new Error("Redirected"); }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('likeIcon').innerText = data.isLiked ? '❤️' : '🤍';
+                        document.getElementById('likeCount').innerText = data.likeCount;
+                    } else alert(data.message);
+                })
+                .catch(error => {
+                    if (error.message !== "Redirected") console.error("Fetch Error:", error);
+                });
+            });
+
+            // ==========================================
+            // 🌟 AJAX 無痕：收藏 / 取消收藏 (新增訪客防呆)
+            // ==========================================
+            document.getElementById('favoriteBtn').addEventListener('click', function() {
+                // 🌟 防呆攔截：沒登入就擋下來
+                if (!isAuthenticated) {
+                    alert("💡 請先登入才能收藏貼文喔！");
+                    window.location.href = '/Members/Login';
+                    return;
+                }
+
+                const postId = this.getAttribute('data-post-id');
+                const btn = this;
+
+                btn.style.transform = "scale(0.9)";
+                setTimeout(() => btn.style.transform = "scale(1)", 150);
+
+                fetch(`/Posts/ToggleFavorite?postId=${postId}`, { method: 'POST' })
+                .then(res => {
+                    if (res.redirected) { window.location.href = '/Members/Login'; throw new Error("Redirected"); }
+                    if (!res.ok) throw new Error("伺服器回應錯誤 (狀態碼：" + res.status + ")");
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const iconSpan = document.getElementById('favoriteIcon');
+                        if (data.isFavorited) {
+                            btn.style.backgroundColor = '#FFBD9D';
+                            btn.style.color = 'white';
+                            iconSpan.innerText = '🔖 已收藏';
+                            showToast('✅ 已加入我的收藏夾！', true);
+                        } else {
+                            btn.style.backgroundColor = '#fff';
+                            btn.style.color = '#FFBD9D';
+                            iconSpan.innerText = '⭐ 收藏';
+                            showToast('✅ 已從收藏夾移除！', true);
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    if (error.message !== "Redirected") {
+                        console.error("Fetch Error:", error);
+                        alert("收藏功能發生異常，請檢查控制台：" + error.message);
+                    }
+                });
+            });
+
+            function previewImage(input, previewImgId, removeBtnId) {
+                const previewImg = document.getElementById(previewImgId);
+                const removeBtn = document.getElementById(removeBtnId);
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        previewImg.src = e.target.result;
+                        previewImg.classList.remove('d-none');
+                        removeBtn.classList.remove('d-none');
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                    if(previewImgId === 'editCommentPreview') document.getElementById('removeImageFlag').value = 'N';
+                }
+            }
+
+            function clearAddImage() {
+                document.getElementById('uploadImage').value = '';
+                document.getElementById('addCommentPreview').classList.add('d-none');
+                document.getElementById('removeAddImgBtn').classList.add('d-none');
+            }
+
+            function clearEditImage() {
+                document.getElementById('editUploadImage').value = '';
+                document.getElementById('editCommentPreview').classList.add('d-none');
+                document.getElementById('removeEditImgBtn').classList.add('d-none');
+                document.getElementById('removeImageFlag').value = 'Y';
+            }
+
+            function openEditModal(commentId, postId, content, imageUrl) {
+                document.getElementById('editCommentId').value = commentId;
+                document.getElementById('editPostId').value = postId;
+
+                const textarea = document.getElementById('editContentText');
+                textarea.value = content;
+                setTimeout(() => { textarea.style.height = textarea.scrollHeight + 'px'; }, 10);
+                document.getElementById('removeImageFlag').value = 'N';
+                document.getElementById('editUploadImage').value = '';
+
+                const previewImg = document.getElementById('editCommentPreview');
+                const removeBtn = document.getElementById('removeEditImgBtn');
+                if (imageUrl && imageUrl !== '') {
+                    previewImg.src = "/images/comments/" + imageUrl;
+                    previewImg.classList.remove('d-none');
+                    removeBtn.classList.remove('d-none');
+                } else {
+                    previewImg.classList.add('d-none');
+                    removeBtn.classList.add('d-none');
+                }
+                var editModal = new bootstrap.Modal(document.getElementById('editCommentModal'));
+                editModal.show();
+            }
+        </script>
+}

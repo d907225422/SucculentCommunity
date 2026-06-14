@@ -1,0 +1,198 @@
+﻿@model SucculentCommunity.Models.Species
+
+@{
+    ViewData["Title"] = "編輯多肉圖鑑";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5" style="background-color: #FAFAFA;">
+
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold" style="color: #5C8A8A;">✏️ 編輯多肉圖鑑</h2>
+                </div>
+
+                <form asp-action="Edit" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <input type="hidden" asp-for="SpeciesImg" />
+                    <input type="hidden" name="CroppedImage" id="croppedImage" />
+
+                    <h5 class="fw-bold mb-3" style="color: #7A8C8A;">📖 基本資料</h5>
+                    <div class="row bg-white p-3 rounded-4 shadow-sm mb-4 mx-0">
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="SpeciesID" class="control-label fw-bold text-muted small mb-1"></label>
+                            <input asp-for="SpeciesID" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" readonly />
+                        </div>
+
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="CommonName" class="control-label fw-bold text-muted small mb-1"></label>
+                            <input asp-for="CommonName" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" />
+                            <span asp-validation-for="CommonName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-12 form-group mb-3">
+                            <label asp-for="ScientificName" class="control-label fw-bold text-muted small mb-1"></label>
+                            <input asp-for="ScientificName" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" />
+                        </div>
+
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="Family" class="control-label fw-bold text-muted small mb-1">🌵 科別</label>
+                            <input asp-for="Family" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" />
+                        </div>
+
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="Genus" class="control-label fw-bold text-muted small mb-1">🌿 屬別</label>
+                            <input asp-for="Genus" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" />
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3" style="color: #7A8C8A;">💧 照顧指南</h5>
+                    <div class="row bg-white p-3 rounded-4 shadow-sm mb-4 mx-0">
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="GrowthSeason" class="control-label fw-bold text-muted small mb-1">⏳ 生長季節</label>
+                            <input asp-for="GrowthSeason" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" />
+                        </div>
+
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="LightGuide" class="control-label fw-bold text-muted small mb-1">☀️ 光照指標</label>
+                            <input asp-for="LightGuide" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" />
+                        </div>
+
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="WaterGuide" class="control-label fw-bold text-muted small mb-1">💦 澆水指標</label>
+                            <input asp-for="WaterGuide" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" />
+                        </div>
+
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="SoilMix" class="control-label fw-bold text-muted small mb-1">🪨 介質需求</label>
+                            <input asp-for="SoilMix" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" />
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3" style="color: #7A8C8A;">📸 照片與描述</h5>
+                    <div class="bg-white p-4 rounded-4 shadow-sm mb-5 mx-0">
+
+                        <div class="mb-4 d-flex align-items-center bg-light p-3 rounded-4">
+                            @{
+                                var currentImg = string.IsNullOrEmpty(Model.SpeciesImg) ? "default.jpg" : Model.SpeciesImg;
+                            }
+                            <img id="speciesImagePreview" src="~/images/species/@currentImg" class="rounded-4 shadow-sm me-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #E6F2F2;" />
+                            <div>
+                                <p class="mb-1 fw-bold text-secondary small">目前圖鑑照片</p>
+                                <p class="mb-0 text-muted small" style="font-size: 0.8rem;">若不更換請留空</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label class="control-label fw-bold text-muted small mb-2">更新照片</label>
+                            <input type="file" id="uploadSpeciesImg" name="uploadImage" class="form-control rounded-pill border-0 bg-light px-3" accept="image/*" />
+                        </div>
+
+                        <div class="form-group mb-2">
+                            <label asp-for="Description" class="control-label fw-bold text-muted small mb-1"></label>
+                            <textarea asp-for="Description" class="form-control border-0 bg-light shadow-sm p-3" rows="4" style="border-radius: 20px;"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="javascript:history.back()" class="btn btn-light rounded-pill px-4 text-muted fw-bold shadow-sm smart-back-btn" data-fallback="/Species/Index">取消返回</a>
+                        <button type="submit" class="btn rounded-pill px-5 text-white fw-bold shadow-sm" style="background-color: #5C8A8A;">💾 儲存變更</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold" id="cropModalLabel" style="color: #5C8A8A;">✂️ 調整圖鑑照片</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div style="max-height: 500px; overflow: hidden;">
+                    <img id="imageToCrop" style="max-width: 100%; display: block;" />
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 justify-content-center">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn rounded-pill px-4 text-white fw-bold shadow-sm" id="cropBtn" style="background-color: #B8D8BA;">確定裁切</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+    <script>
+        let cropper;
+        const uploadInput = document.getElementById('uploadSpeciesImg');
+        const imageToCrop = document.getElementById('imageToCrop');
+        const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+        const speciesImagePreview = document.getElementById('speciesImagePreview');
+        const croppedImageInput = document.getElementById('croppedImage');
+
+        // 當選擇檔案時觸發
+        uploadInput.addEventListener('change', function (e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    imageToCrop.src = event.target.result;
+                    cropModal.show();
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        });
+
+        // 當 Modal 顯示時初始化 Cropper
+        document.getElementById('cropModal').addEventListener('shown.bs.modal', function () {
+            if (cropper) { cropper.destroy(); }
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: 1, // 圖鑑照片預設裁切為 1:1
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.9,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
+        });
+
+        // 按下「確定裁切」按鈕
+        document.getElementById('cropBtn').addEventListener('click', function () {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 800, // 圖鑑照片保留較高解析度
+                    height: 800
+                });
+
+                const base64Image = canvas.toDataURL('image/jpeg', 0.9);
+
+                // 1. 把裁切好的圖給預覽框並顯示
+                speciesImagePreview.src = base64Image;
+
+                // 2. 把 Base64 字串塞進隱藏欄位準備送給後端
+                croppedImageInput.value = base64Image;
+
+                cropModal.hide();
+            }
+        });
+    </script>
+}

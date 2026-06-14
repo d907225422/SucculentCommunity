@@ -1,0 +1,45 @@
+﻿@model SucculentCommunity.Models.Member
+
+@{
+    ViewData["Title"] = "編輯會員狀態";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5" style="background-color: #FAFAFA;">
+
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold mb-1" style="color: #5C8A8A;">🛡️ 編輯會員狀態</h3>
+                    <p class="text-muted small">管理員僅能變更帳號使用權限</p>
+                </div>
+
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="MemberID" />
+
+                    <div class="bg-white p-4 rounded-4 shadow-sm mb-4 text-center">
+                        <img src="~/images/avatars/@Model.Avatar" class="rounded-circle shadow-sm mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 4px solid #E6F2F2;" />
+                        <h5 class="fw-bold" style="color: #4A6B6B;">@Model.Account</h5>
+                        <p class="text-muted small mb-0">暱稱：@Model.Nickname</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+                        <div class="form-group">
+                            <label asp-for="Status" class="control-label fw-bold text-muted small mb-2">設定帳號狀態 *</label>
+                            <select asp-for="Status" class="form-select rounded-pill border-1 bg-light shadow-sm px-3 fw-bold">
+                                <option value="1" style="color: green;">🟢 正常 (允許登入與發文)</option>
+                                <option value="0" style="color: red;">🔴 停權 (禁止登入本站)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="javascript:history.back()" class="btn btn-light rounded-pill px-4 text-muted fw-bold shadow-sm smart-back-btn" data-fallback="/Members/Index">取消返回</a>
+                        <button type="submit" class="btn rounded-pill px-5 text-white fw-bold shadow-sm" style="background-color: #5C8A8A;">💾 確認變更</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

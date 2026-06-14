@@ -1,0 +1,223 @@
+﻿@model SucculentCommunity.Models.Species
+
+@{
+    ViewData["Title"] = Model.CommonName + " - 多肉圖鑑";
+    // 🌟 從後端接住各種狀態
+    bool isFavorited = ViewBag.IsFavorited ?? false;
+    bool isAdmin = ViewBag.IsAdmin ?? false; // 🌟 接住管理員權限
+}
+
+<div class="container mt-4 mb-5">
+
+    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a href="#" class="btn btn-sm btn-light rounded-pill px-3 text-muted fw-bold shadow-sm smart-back-btn" data-fallback="/Species/Index">
+            ⬅️ 返回上一頁
+        </a>
+
+        @if (isAdmin)
+        {
+            <div>
+                <a asp-action="Edit" asp-route-id="@Model.SpeciesID" class="btn btn-sm btn-outline-theme rounded-pill px-4 fw-bold me-2 shadow-sm">
+                    ✏️ 編輯圖鑑
+                </a>
+                <a asp-action="Delete" asp-route-id="@Model.SpeciesID" class="btn btn-sm btn-outline-danger rounded-pill px-4 fw-bold shadow-sm">
+                    🗑️ 刪除圖鑑
+                </a>
+            </div>
+        }
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style="background-color: #FAFAFA;">
+        <div class="row g-0">
+
+            <div class="col-md-5 d-flex align-items-stretch">
+                @if (!string.IsNullOrEmpty(Model.SpeciesImg))
+                {
+                    <img src="~/images/species/@Model.SpeciesImg" class="img-fluid w-100 h-100" style="object-fit: cover; min-height: 400px;" alt="@Model.CommonName" />
+                }
+                else
+                {
+                    <div class="d-flex align-items-center justify-content-center w-100 h-100 bg-light" style="min-height: 400px;">
+                        <span class="fs-1 opacity-25">🪴</span>
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-7 p-4 p-md-5">
+
+                <div class="mb-4">
+                    <h1 class="fw-bold mb-1" style="color: #4A6B6B;">@Model.CommonName</h1>
+                    <p class="fs-5 mb-3" style="font-style: italic; color: #9E9E9E;">
+                        @(string.IsNullOrEmpty(Model.ScientificName) ? "Unknown Scientific Name" : Model.ScientificName)
+                    </p>
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        @if (!string.IsNullOrEmpty(Model.Family))
+                        {
+                            <span class="badge rounded-pill shadow-sm px-3 py-2" style="background-color: #E6F2F2; color: #5C8A8A; font-weight: bold;">🌱 @Model.Family</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Genus))
+                        {
+                            <span class="badge rounded-pill shadow-sm px-3 py-2 bg-white text-secondary border border-secondary" style="font-weight: bold;">🌿 @Model.Genus</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.GrowthSeason))
+                        {
+                            <span class="badge rounded-pill shadow-sm px-3 py-2" style="background-color: #FFE5E5; color: #E63946; font-weight: bold;">⏳ @Model.GrowthSeason</span>
+                        }
+                    </div>
+                </div>
+
+                <hr style="border-color: #E6F2F2; border-width: 2px;" />
+
+                <h5 class="fw-bold mt-4 mb-3" style="color: #7A8C8A;">💧 照顧指南</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-4">
+                        <div class="bg-white p-3 rounded-4 shadow-sm h-100 text-center border-0" style="border-bottom: 3px solid #FFD166 !important;">
+                            <div class="fs-4 mb-1">☀️</div>
+                            <div class="fw-bold text-muted small mb-1">光照需求</div>
+                            <div class="fw-bold" style="color: #4A6B6B;">@(string.IsNullOrEmpty(Model.LightGuide) ? "尚未建立" : Model.LightGuide)</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="bg-white p-3 rounded-4 shadow-sm h-100 text-center border-0" style="border-bottom: 3px solid #4D96FF !important;">
+                            <div class="fs-4 mb-1">💦</div>
+                            <div class="fw-bold text-muted small mb-1">澆水頻率</div>
+                            <div class="fw-bold" style="color: #4A6B6B;">@(string.IsNullOrEmpty(Model.WaterGuide) ? "尚未建立" : Model.WaterGuide)</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="bg-white p-3 rounded-4 shadow-sm h-100 text-center border-0" style="border-bottom: 3px solid #B8D8BA !important;">
+                            <div class="fs-4 mb-1">🪨</div>
+                            <div class="fw-bold text-muted small mb-1">介質建議</div>
+                            <div class="fw-bold" style="color: #4A6B6B;">@(string.IsNullOrEmpty(Model.SoilMix) ? "尚未建立" : Model.SoilMix)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mb-3" style="color: #7A8C8A;">📝 園丁筆記</h5>
+                <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+                    <p class="mb-0 text-secondary" style="line-height: 1.8;">
+                        @Html.Raw(Model.Description.Replace("\n", "<br />"))
+                    </p>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-auto pt-3">
+                    <span class="text-muted small">圖鑑代碼：@Model.SpeciesID</span>
+
+                    <button id="btnFavorite" class="btn rounded-pill px-4 fw-bold shadow-sm transition-all"
+                            style="background-color: @(isFavorited ? "#FFBD9D" : "#fff");
+                                   color: @(isFavorited ? "#fff" : "#FFBD9D");
+                                   border: 2px solid #FFBD9D;">
+                        <span id="favIcon">@(isFavorited ? "🔖 已收藏此品種" : "⭐ 收藏此品種")</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2 px-2">
+        @if (ViewBag.PrevId != null)
+        {
+            <a href="/Species/Details/@ViewBag.PrevId" class="btn bg-white text-secondary rounded-pill px-4 py-2 shadow-sm fw-bold border-0" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateX(-5px)'" onmouseout="this.style.transform='translateX(0)'">
+                ⬅️ 上一個品種
+            </a>
+        }
+        else
+        {
+            <div style="width: 100px;"></div>
+        }
+
+        @if (ViewBag.NextId != null)
+        {
+            <a href="/Species/Details/@ViewBag.NextId" class="btn bg-white text-secondary rounded-pill px-4 py-2 shadow-sm fw-bold border-0" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
+                下一個品種 ➡️
+            </a>
+        }
+        else
+        {
+            <div style="width: 100px;"></div>
+        }
+    </div>
+
+</div>
+
+<style>
+    /* 🌟 專屬主題色編輯按鈕樣式 (滑鼠移入填滿) */
+    .btn-outline-theme {
+        color: #5C8A8A;
+        border: 1px solid #5C8A8A;
+        background-color: #fff;
+    }
+
+        .btn-outline-theme:hover {
+            color: #fff;
+            background-color: #5C8A8A;
+        }
+
+    /* 滑鼠懸停照顧指南小卡時的微互動 */
+    .row.g-3 > .col-sm-4 > div {
+        transition: transform 0.2s;
+    }
+
+        .row.g-3 > .col-sm-4 > div:hover {
+            transform: translateY(-3px);
+        }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // 🌟 AJAX 收藏品種功能
+        document.getElementById('btnFavorite').addEventListener('click', function() {
+            const speciesId = "@Model.SpeciesID";
+            const btn = this;
+            const icon = document.getElementById('favIcon');
+
+            // 點擊瞬間微縮放動畫
+            btn.style.transform = "scale(0.9)";
+            setTimeout(() => btn.style.transform = "scale(1)", 150);
+
+            btn.disabled = true;
+            fetch(`/Species/ToggleFavorite?speciesId=${speciesId}`, { method: 'POST' })
+            .then(res => {
+                if (!res.ok) throw new Error("伺服器回應錯誤");
+                return res.json(); // 解析 JSON
+            })
+            .then(data => {
+                if (data.success) {
+                    if (data.isFavorited) {
+                        btn.style.backgroundColor = "#FFBD9D";
+                        btn.style.color = "#fff";
+                        icon.innerText = "🔖 已收藏此品種";
+                    } else {
+                        btn.style.backgroundColor = "#fff";
+                        btn.style.color = "#FFBD9D";
+                        icon.innerText = "⭐ 收藏此品種";
+                    }
+                } else {
+                    // 🌟 處理未登入狀態
+                    if (data.message.includes("請先登入")) {
+                        alert(data.message); // 確實跳出「請先登入後再收藏品種喔！」
+
+                        // 取得現在的網址，帶去 Login 頁面當作 ReturnUrl
+                        const currentUrl = encodeURIComponent(window.location.pathname);
+                        window.location.href = `/Members/Login?ReturnUrl=${currentUrl}`;
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("AJAX Error:", err);
+                alert("操作發生異常，請稍後再試。");
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
+        });
+    </script>
+}

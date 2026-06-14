@@ -1,0 +1,35 @@
+﻿@{
+    ViewData["Title"] = "園丁登入";
+}
+
+<div class="d-flex justify-content-center mt-5">
+    <div class="succulent-card" style="width: 400px; padding: 40px 30px;">
+        <h2 class="text-center fw-bold mb-4" style="color: #5C8A8A;">🌿 園丁登入</h2>
+
+        @if (ViewData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger rounded-pill text-center py-2 mb-4" style="font-size: 0.9rem;">
+                @ViewData["ErrorMessage"]
+            </div>
+        }
+
+        <form asp-action="Login" method="post" asp-route-returnurl="@ViewData["ReturnUrl"]">
+            <div class="form-group mb-3">
+                <label class="control-label text-muted mb-1 small fw-bold">會員帳號</label>
+                <input type="text" name="account" class="form-control rounded-pill border-0 bg-light" placeholder="請輸入帳號" required />
+            </div>
+            <div class="form-group mb-4">
+                <label class="control-label text-muted mb-1 small fw-bold">登入密碼</label>
+                <input type="password" name="password" class="form-control rounded-pill border-0 bg-light" placeholder="請輸入密碼" required />
+            </div>
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn rounded-pill fw-bold text-white shadow-sm" style="background-color: #B8D8BA; transition: 0.2s;">
+                    登入園地
+                </button>
+            </div>
+            <div class="text-center mt-3">
+                <a asp-action="Create" class="text-decoration-none small" style="color: #7A8C8A;">還沒有帳號嗎？點我註冊</a>
+            </div>
+        </form>
+    </div>
+</div>

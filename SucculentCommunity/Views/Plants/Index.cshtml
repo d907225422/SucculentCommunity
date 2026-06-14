@@ -1,0 +1,101 @@
+﻿@model IEnumerable<SucculentCommunity.Models.Plant>
+
+@{
+    ViewData["Title"] = "我的溫室";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #5C8A8A;">🪴 我的溫室</h2>
+            <p class="text-muted small mb-0">目前收編了 @Model.Count() 盆可愛的小肉肉！</p>
+        </div>
+        <a asp-controller="Posts" asp-action="Create" class="btn rounded-pill px-4 text-white fw-bold shadow-sm" style="background-color: #B8D8BA;">
+            ➕ 收編新植物
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <h4 class="text-muted mb-3">溫室裡還空空的呢！</h4>
+            <p class="text-secondary mb-4">趕快去發布一篇日誌，順便把你可愛的植物建檔吧！</p>
+            <a asp-controller="Posts" asp-action="Create" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                去發布第一篇日誌 🚀
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var plant in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0 rounded-4 plant-card-hover text-center overflow-hidden" style="background-color: #FAFAFA;">
+
+                        <div class="pt-4 pb-2">
+                            <img src="~/images/avatars/@plant.PlantImage" class="rounded-circle shadow-sm" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #E6F2F2;" alt="@plant.PlantNickname 的照片" />
+                        </div>
+
+                        <div class="card-body px-3 pb-3">
+                            <h4 class="card-title fw-bold mb-1" style="color: #5C8A8A;">@plant.PlantNickname</h4>
+
+                            @if (plant.Species != null)
+                            {
+                                <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 mb-3">
+                                    📖 品種：@plant.Species.CommonName
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 mb-3">
+                                    📖 品種：未設定
+                                </span>
+                            }
+
+                            <p class="card-text text-muted small mb-0">
+                                🎂 收編日：@plant.CreateDate.ToString("yyyy/MM/dd")
+                            </p>
+                        </div>
+
+                        <div class="card-footer bg-white border-top border-light py-3 d-flex justify-content-center gap-2">
+
+                            <a asp-action="Edit" asp-route-id="@plant.PlantID" class="btn btn-sm btn-outline-theme rounded-pill px-3 fw-bold shadow-sm">
+                                ✏️ 編輯
+                            </a>
+
+                            <form asp-action="Delete" asp-route-id="@plant.PlantID" method="post" onsubmit="return confirm('⚠️ 確定要刪除這盆植物嗎？\n\n注意：這盆植物的所有「多肉日誌」與「養護心得」也會跟著一起被刪除，且無法復原喔！🥀');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold shadow-sm">
+                                    🗑️ 刪除
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    /* 🌟 專屬主題色編輯按鈕樣式 (滑鼠移入填滿) */
+    .btn-outline-theme {
+        color: #5C8A8A;
+        border: 1px solid #5C8A8A;
+        background-color: #fff;
+    }
+
+        .btn-outline-theme:hover {
+            color: #fff;
+            background-color: #5C8A8A;
+        }
+
+    .plant-card-hover {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+        .plant-card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(92, 138, 138, 0.15) !important;
+        }
+</style>

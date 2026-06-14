@@ -1,0 +1,247 @@
+﻿@using SucculentCommunity.Data
+@inject SucculentContext _context
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - 小肉肉園地</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/SucculentCommunity.styles.css" asp-append-version="true" />
+
+    <style>
+        /* 🌟 專屬導覽列連結樣式：融合網站主題風格 */
+        .custom-nav-link {
+            color: #7A8C8A !important; /* 柔和的灰綠色 */
+            font-weight: bold;
+            padding: 0.5rem 1rem !important;
+            margin: 0 0.2rem;
+            border-radius: 20px; /* 圓潤感 */
+            transition: all 0.2s ease-in-out;
+        }
+
+            .custom-nav-link:hover {
+                color: #5C8A8A !important; /* 滑鼠移入變為主題深綠 */
+                background-color: #E6F2F2; /* 淡淡的薄荷綠背景 */
+                transform: translateY(-1px); /* 微微浮起 */
+            }
+
+        /* 🌟 小肉肉園地專屬：全站統一分頁樣式 */
+        .custom-pagination .pagination {
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0;
+        }
+
+        .custom-pagination .page-item .page-link {
+            border-radius: 50px !important; /* 統一圓角按鈕 */
+            color: #5C8A8A; /* 主題深綠 */
+            border: none;
+            box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+            font-weight: bold;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+        }
+
+        .custom-pagination .page-item.active .page-link {
+            background-color: #B8D8BA !important; /* 選中時變薄荷綠 */
+            color: white !important;
+        }
+
+        .custom-pagination .page-item .page-link:hover {
+            background-color: #E6F2F2;
+            transform: translateY(-2px);
+        }
+
+        .custom-pagination .page-item.disabled .page-link {
+            background-color: #f8f9fa;
+            color: #ccc;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow mb-3" style="background-color: #F0F8FF !important;">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index" style="color: #5C8A8A;">
+                    🪴 小肉肉園地
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
+                    <ul class="navbar-nav flex-grow-1">                        
+                        <li class="nav-item">
+                            <a class="nav-link custom-nav-link" asp-area="" asp-controller="Announcements" asp-action="Index">📢 系統公告</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link custom-nav-link" asp-area="" asp-controller="Species" asp-action="Index">📚 多肉圖鑑</a>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            // 🌟 透過資料庫精靈找出這位園丁的資料，取得專屬大頭照！
+                            var currentUser = _context.Members.FirstOrDefault(m => m.Account == User.Identity.Name);
+                            var avatar = currentUser?.Avatar ?? "default.jpg";
+                            // 🌟 優先抓取資料庫裡最新鮮的暱稱！
+                            var nickname = currentUser?.Nickname ?? User.FindFirst("Nickname")?.Value ?? "園丁";
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="memberDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="~/images/avatars/@avatar" class="rounded-circle shadow-sm" style="width: 35px; height: 35px; object-fit: cover; border: 2px solid #E6F2F2;" alt="大頭貼">
+                                    <span class="fw-bold" style="color: #5C8A8A;">@nickname</span>
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4 mt-2" aria-labelledby="memberDropdown">
+
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item py-2 fw-bold" asp-controller="Members" asp-action="Index" style="color: #FF758C;">
+                                                👑 會員管理 (後台)
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2 fw-bold" asp-controller="Posts" asp-action="AdminIndex" style="color: #FF758C;">
+                                                🛡️ 貼文管理 (後台)
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider opacity-25"></li>
+                                    }
+
+                                    <li>
+                                        <a class="dropdown-item py-2 text-secondary fw-bold" asp-controller="Posts" asp-action="MyDiary">
+                                            📝 我的紀錄
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 text-secondary fw-bold" asp-controller="Plants" asp-action="Index">
+                                            🪴 我的溫室
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 text-secondary fw-bold" asp-controller="Posts" asp-action="MyFavorites">
+                                            🔖 我的收藏夾
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider opacity-25"></li>
+
+                                    <li>
+                                        <a class="dropdown-item py-2 text-secondary fw-bold" asp-controller="Members" asp-action="EditProfile">
+                                            ⚙️ 編輯個人資料
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 text-danger fw-bold" asp-controller="Members" asp-action="Logout">
+                                            🚪 登出
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item me-2">
+                                <a class="btn btn-sm btn-outline-success rounded-pill fw-bold px-3" asp-area="" asp-controller="Members" asp-action="Login">登入</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-sm text-white rounded-pill fw-bold px-3" style="background-color: #B8D8BA;" asp-area="" asp-controller="Members" asp-action="Create">註冊</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted text-center py-3">
+        <div class="container">
+            &copy; 2026 - 小肉肉園地：多肉分享互動社群 - <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-decoration-none" style="color: #5C8A8A;">隱私權政策</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const alertBox = document.createElement('div');
+                // 成功訊息：使用你網站的薄荷綠主題色
+                alertBox.className = 'alert rounded-pill text-center py-2 px-4 fw-bold shadow-lg';
+                alertBox.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; transition: opacity 0.5s ease; background-color: #B8D8BA; color: white; border: none;';
+                alertBox.innerText = '@Html.Raw(TempData["SuccessMessage"])';
+                document.body.appendChild(alertBox);
+
+                // 3 秒後自動淡出消失
+                setTimeout(() => {
+                    alertBox.style.opacity = "0";
+                    setTimeout(() => alertBox.remove(), 500);
+                }, 3000);
+            });
+        </script>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const alertBox = document.createElement('div');
+                // 錯誤/警告訊息：使用柔和的櫻桃粉紅色
+                alertBox.className = 'alert rounded-pill text-center py-2 px-4 fw-bold shadow-lg';
+                alertBox.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; transition: opacity 0.5s ease; background-color: #FF758C; color: white; border: none;';
+                alertBox.innerText = '@Html.Raw(TempData["ErrorMessage"])';
+                document.body.appendChild(alertBox);
+
+                // 3 秒後自動淡出消失
+                setTimeout(() => {
+                    alertBox.style.opacity = "0";
+                    setTimeout(() => alertBox.remove(), 500);
+                }, 3000);
+            });
+        </script>
+    }
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 抓出畫面上所有帶有 'smart-back-btn' 這個 class 的元素
+            const backBtns = document.querySelectorAll('.smart-back-btn');
+
+            backBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault(); // 先阻止 <a> 標籤預設的亂跳行為
+
+                    // 取得按鈕上設定的「備用網址」(防呆用)
+                    const fallbackUrl = this.getAttribute('data-fallback') || '/';
+
+                    // 判斷瀏覽器有沒有「上一頁」的紀錄 (且上一頁不能是空白頁)
+                    if (window.history.length > 1 && document.referrer !== "") {
+                        window.history.back(); // 乖乖回上一頁 (保留搜尋條件與頁籤)
+                    } else {
+                        // 如果是別人傳連結給他，開新分頁進來的，沒有上一頁，就帶他去備用網址！
+                        window.location.href = fallbackUrl;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

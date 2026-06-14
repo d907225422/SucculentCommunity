@@ -1,0 +1,63 @@
+﻿@model SucculentCommunity.Models.Announcement
+
+@{
+    ViewData["Title"] = "公告明細";
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a asp-action="Index" class="btn btn-sm btn-light rounded-pill px-3 text-muted fw-bold shadow-sm">
+                    ⬅️ 返回公告列表
+                </a>
+
+                @if (isAdmin)
+                {
+                    <div class="d-flex gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.AnnounceID" class="btn btn-sm btn-outline-theme rounded-pill px-3 fw-bold shadow-sm">
+                            ✏️ 編輯
+                        </a>
+                        <form asp-action="Delete" asp-route-id="@Model.AnnounceID" method="post" onsubmit="return confirm('⚠️ 確定要刪除這篇公告嗎？');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold shadow-sm bg-white">
+                                🗑️ 刪除
+                            </button>
+                        </form>
+                    </div>
+                }
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 mb-4" style="background-color: #FAFAFA;">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4 pb-4 border-bottom">
+                        <span class="badge rounded-pill bg-light text-secondary border mb-3 px-3 py-2 fs-6">
+                            🗓️ 發佈時間：@Model.PostTime.ToString("yyyy/MM/dd HH:mm")
+                        </span>
+                        <h2 class="fw-bold" style="color: #4A6B6B;">@Model.Title</h2>
+                    </div>
+
+                    <div class="fs-5 text-secondary" style="line-height: 1.8; white-space: pre-wrap;">@Html.Raw(Model.Content)</div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 🌟 專屬主題色編輯按鈕樣式 */
+    .btn-outline-theme {
+        color: #5C8A8A;
+        border: 1px solid #5C8A8A;
+        background-color: #fff;
+    }
+
+        .btn-outline-theme:hover {
+            color: #fff;
+            background-color: #5C8A8A;
+        }
+</style>

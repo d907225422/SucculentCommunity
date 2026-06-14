@@ -1,0 +1,96 @@
+﻿@using X.PagedList.Mvc.Core
+@using X.PagedList
+@model IPagedList<SucculentCommunity.Models.Member>
+
+@{
+    ViewData["Title"] = "園丁名冊";
+}
+
+<div class="container mt-4 mb-5 d-flex flex-column" style="min-height: calc(100vh - 220px);">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #5C8A8A;">👑 園丁名冊 (後台管理)</h2>
+            <p class="text-muted small mb-0">管理員專屬的會員管理中心</p>
+        </div>
+
+        <form asp-action="Index" method="get" class="d-flex">
+            <input type="text" name="searchString" class="form-control rounded-pill me-2 border-1 bg-white shadow-sm" placeholder="🔍 搜尋帳號或暱稱..." style="width: 250px;" value="@ViewData["CurrentFilter"]">
+            <button type="submit" class="btn rounded-pill fw-bold shadow-sm text-white" style="background-color: #B8D8BA;">搜尋</button>
+        </form>
+    </div>
+
+    <div class="table-responsive shadow-sm rounded-4 bg-white p-4 mb-4">
+        <table class="table table-hover align-middle mb-0 border-0">
+            <thead class="text-secondary" style="border-bottom: 2px solid #E6F2F2;">
+                <tr>
+                    <th class="border-0">大頭貼</th>
+                    <th class="border-0">會員帳號</th>
+                    <th class="border-0">園丁暱稱</th>
+                    <th class="border-0">帳號狀態</th>
+                    <th class="border-0 text-center">後台操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="border-light">
+                            <img src="~/images/avatars/@item.Avatar" alt="Avatar" class="rounded-circle shadow-sm" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #E6F2F2;" />
+                        </td>
+                        <td class="fw-bold text-secondary border-light">
+                            @Html.DisplayFor(modelItem => item.Account)
+                            @if (item.IsAdmin)
+                            {
+                                <span class="badge bg-warning text-dark ms-1 rounded-pill small">Admin</span>
+                            }
+                        </td>
+                        <td class="border-light">
+                            @Html.DisplayFor(modelItem => item.Nickname)
+                        </td>
+                        <td class="border-light">
+                            @if (item.Status == "1")
+                            {
+                                <span class="badge rounded-pill px-3 py-2" style="background-color: #B8D8BA; color: #fff;">🟢 正常</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill px-3 py-2" style="background-color: #FFE5E5; color: #E63946;">🔴 停權</span>
+                            }
+                        </td>
+                        <td class="border-light text-center">
+                            <a asp-action="Edit" asp-route-id="@item.MemberID" class="btn btn-sm btn-outline-theme rounded-pill px-3 fw-bold me-1">狀態</a>
+                            <a asp-action="Details" asp-route-id="@item.MemberID" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">明細</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="custom-pagination mt-auto pt-2 pb-4 d-flex justify-content-center">
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { 
+            page, 
+            searchString = ViewData["CurrentFilter"]
+        }), new PagedListRenderOptions {
+            LiElementClasses = new string[] { "page-item" },
+            PageClasses = new string[] { "page-link" },
+            LinkToPreviousPageFormat = "⬅️ 上一頁",
+            LinkToNextPageFormat = "下一頁 ➡️",
+            MaximumPageNumbersToDisplay = 5,
+            Display = PagedListDisplayMode.Always // 🌟 永遠顯示分頁列
+        })
+    </div>
+</div>
+
+<style>
+    .btn-outline-theme {
+        color: #5C8A8A;
+        border: 1px solid #5C8A8A;
+        background-color: #fff;
+    }
+
+        .btn-outline-theme:hover {
+            color: #fff;
+            background-color: #5C8A8A;
+        }
+</style>

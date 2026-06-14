@@ -1,0 +1,131 @@
+﻿@model SucculentCommunity.Models.Member
+
+@{
+    ViewData["Title"] = "新增園丁";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4 pb-5" style="background-color: #FAFAFA;">
+
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold" style="color: #5C8A8A;">🌱 註冊新園丁</h2>
+                    <p class="text-muted small">一起加入小肉肉的療癒世界吧！</p>
+                </div>
+
+                <form asp-action="Create" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="Account" class="control-label fw-bold text-muted small mb-1">會員帳號</label>
+                            <input asp-for="Account" class="form-control rounded-pill border-0 bg-white shadow-sm px-3" placeholder="請輸入英數字" />
+                            <span asp-validation-for="Account" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 form-group mb-3">
+                            <label asp-for="Password" class="control-label fw-bold text-muted small mb-1">登入密碼</label>
+                            <input asp-for="Password" type="password" class="form-control rounded-pill border-0 bg-white shadow-sm px-3" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label asp-for="Nickname" class="control-label fw-bold text-muted small mb-1">園丁暱稱</label>
+                        <input asp-for="Nickname" class="form-control rounded-pill border-0 bg-white shadow-sm px-3" placeholder="大家怎麼稱呼你呢？" />
+                        <span asp-validation-for="Nickname" class="text-danger small"></span>
+                    </div>
+
+                    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+
+                    <div class="form-group mb-5 p-3 rounded-4 bg-white shadow-sm">
+                        <label class="control-label fw-bold mb-2" style="color: #5C8A8A;">📸 上傳大頭貼 (支援自動裁切)</label>
+                        <input type="file" id="uploadImage" class="form-control rounded-pill border-0 bg-light" accept="image/*" />
+                        <input type="hidden" name="avatarBase64" id="avatarBase64" />
+
+                        <div id="cropArea" style="display:none; margin-top: 15px; text-align: center;">
+                            <p class="text-muted small">💡 請拖曳或縮放框框，選擇您要的正方形區域</p>
+                            <div style="max-width: 100%; height: 300px; background-color: #f8f9fa; border-radius: 15px; overflow: hidden;">
+                                <img id="imageToCrop" src="" style="max-width: 100%;">
+                            </div>
+                            <button type="button" id="btnCrop" class="btn btn-outline-success rounded-pill mt-3 fw-bold px-4">✂️ 確認裁切</button>
+                        </div>
+
+                        <div id="previewArea" style="display:none; margin-top: 15px; text-align: center;">
+                            <p class="text-muted small mb-2">大頭貼預覽：</p>
+                            <img id="finalPreview" src="" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #E6F2F2; box-shadow: 0 4px 8px rgba(184, 216, 186, 0.4);">
+                            <br />
+                            <button type="button" id="btnRetake" class="btn btn-sm btn-light text-muted rounded-pill mt-3 px-3">重新選擇</button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-action="Login" class="text-decoration-none text-muted small fw-bold" style="color: #7A8C8A;">👉 已有帳號？前往登入</a>
+                        <input type="submit" value="✨ 加入小肉肉園地" class="btn rounded-pill px-5 text-white fw-bold shadow-sm" style="background-color: #B8D8BA;" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+    <script>
+        let cropper; // 用來裝裁切工具的變數
+
+        document.getElementById('uploadImage').addEventListener('change', function (e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const url = URL.createObjectURL(files[0]);
+                document.getElementById('imageToCrop').src = url;
+
+                // 顯示裁切區，隱藏預覽區
+                document.getElementById('cropArea').style.display = 'block';
+                document.getElementById('previewArea').style.display = 'none';
+
+                // 如果已經有舊的裁切器，先清掉
+                if (cropper) { cropper.destroy(); }
+
+                // 啟動 Cropper 魔法！設定為 1:1 的正方形 (aspectRatio: 1)
+                cropper = new Cropper(document.getElementById('imageToCrop'), {
+                    aspectRatio: 1,
+                    viewMode: 1
+                });
+            }
+        });
+
+        // 當使用者按下「確認裁切」
+        document.getElementById('btnCrop').addEventListener('click', function () {
+            if (!cropper) return;
+
+            // 取得裁切後的圖片 (大小設為 300x300)
+            const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+
+            // 將圖片轉成 Base64 文字編碼 (這是一串很長很長的字串)
+            const base64Url = canvas.toDataURL('image/jpeg');
+
+            // 顯示在預覽圓框裡
+            document.getElementById('finalPreview').src = base64Url;
+
+            // 🌟 最重要的一步：把這串文字塞進隱藏欄位，準備傳給後端
+            document.getElementById('avatarBase64').value = base64Url;
+
+            // 切換顯示狀態：隱藏裁切區，顯示圓形預覽區
+            document.getElementById('cropArea').style.display = 'none';
+            document.getElementById('previewArea').style.display = 'block';
+        });
+
+        // 重新裁切按鈕
+        document.getElementById('btnRetake').addEventListener('click', function() {
+            document.getElementById('cropArea').style.display = 'block';
+            document.getElementById('previewArea').style.display = 'none';
+        });
+    </script>
+}

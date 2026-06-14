@@ -1,0 +1,111 @@
+﻿@using X.PagedList.Mvc.Core
+@using X.PagedList
+@model IPagedList<SucculentCommunity.Models.Species>
+
+@{
+    ViewData["Title"] = "多肉圖鑑";
+    // 🌟 從後端接住管理員狀態
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+}
+
+<div class="d-flex flex-column mb-5" style="min-height: calc(100vh - 220px);">
+
+    <div class="d-flex justify-content-between align-items-center mb-5 mt-2 pb-3 border-bottom flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #5C8A8A;">
+                📚 多肉圖鑑 @(isAdmin ? "(管理員模式)" : "")
+            </h2>
+            <p class="text-muted small mb-0">探索各式各樣的可愛肉肉，尋找你的下一盆心頭好！</p>
+        </div>
+
+        <form asp-action="Index" method="get" class="d-flex align-items-center gap-2">
+            <select name="searchFamily" asp-items="ViewBag.SearchFamily" class="form-select rounded-pill border-0 shadow-sm px-3 fw-bold" style="width: 160px; background-color: #FAFAFA; color: #5C8A8A;">
+                <option value="">🌱 所有科別</option>
+            </select>
+
+            <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control rounded-pill border-0 shadow-sm px-3" placeholder="🔍 找品種..." style="width: 180px; background-color: #FAFAFA;">
+
+            <button type="submit" class="btn rounded-pill fw-bold text-white shadow-sm px-3" style="background-color: #5C8A8A;">搜尋</button>
+
+            @if (isAdmin)
+            {
+                <a asp-action="Create" class="btn rounded-pill fw-bold text-white shadow-sm px-4 ms-2" style="background-color: #B8D8BA;">➕ 新增圖鑑</a>
+            }
+        </form>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4 mb-4">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0 rounded-4 succulent-card-hover position-relative overflow-hidden" style="cursor: pointer;"
+                     onclick="location.href='/Species/Details/@item.SpeciesID'">
+
+                    <img src="~/images/species/@item.SpeciesImg" class="card-img-top" alt="@item.CommonName" style="height: 220px; object-fit: cover;">
+
+                    @if (isAdmin)
+                    {
+                        <div class="position-absolute d-flex flex-column gap-2" style="top: 12px; right: 12px;">
+                            <a asp-action="Edit" asp-route-id="@item.SpeciesID" class="btn btn-light rounded-circle shadow admin-float-btn d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;"
+                               title="編輯" onclick="event.stopPropagation();">
+                                <span style="font-size: 1rem;">✏️</span>
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@item.SpeciesID" class="btn btn-danger text-white rounded-circle shadow admin-float-btn d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;"
+                               title="刪除" onclick="event.stopPropagation();">
+                                <span style="font-size: 1rem;">🗑️</span>
+                            </a>
+                        </div>
+                    }
+
+                    <div class="card-body text-center mt-3 pb-4">
+                        <h4 class="card-title fw-bold mb-1" style="color: #4A6B6B;">@item.CommonName</h4>
+                        <p class="small mb-3" style="font-style: italic; color: #9E9E9E;">@item.ScientificName</p>
+
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <span class="badge rounded-pill shadow-sm px-3 py-2" style="background-color: #E6F2F2; color: #5C8A8A; font-weight: bold;">🌱 @item.Family</span>
+                            <span class="badge rounded-pill shadow-sm px-3 py-2" style="background-color: #FFE5E5; color: #E63946; font-weight: bold;">☀️ @item.GrowthSeason</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="custom-pagination mt-auto pt-4 pb-4 d-flex justify-content-center">
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { 
+            page, 
+            searchString = ViewData["CurrentFilter"], 
+            searchFamily = ViewData["CurrentFamily"] 
+        }), new PagedListRenderOptions {
+            LiElementClasses = new string[] { "page-item" },
+            PageClasses = new string[] { "page-link" },
+            LinkToPreviousPageFormat = "⬅️ 上一頁",
+            LinkToNextPageFormat = "下一頁 ➡️",
+            MaximumPageNumbersToDisplay = 5,
+            Display = PagedListDisplayMode.Always
+        })
+    </div>
+</div>
+
+<style>
+    /* 原本的卡片浮起特效 */
+    .succulent-card-hover {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+        .succulent-card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(184, 216, 186, 0.4) !important;
+        }
+
+    /* 漂浮按鈕的互動特效 */
+    .admin-float-btn {
+        opacity: 0.85;
+        transition: opacity 0.2s, transform 0.2s;
+    }
+
+        .admin-float-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+</style>

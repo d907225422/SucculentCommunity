@@ -1,0 +1,58 @@
+﻿@model SucculentCommunity.Models.Member
+
+@{
+    ViewData["Title"] = "會員明細";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden" style="background-color: #FAFAFA;">
+
+                <div class="card-body p-4 p-md-5 text-center">
+
+                    <div class="mb-4">
+                        <img src="~/images/avatars/@Model.Avatar" class="rounded-circle shadow-sm mb-3" style="width: 120px; height: 120px; object-fit: cover; border: 5px solid #fff;" />
+                        <h3 class="fw-bold mb-1" style="color: #4A6B6B;">@Model.Account</h3>
+                        <p class="text-muted mb-3">@Model.Nickname</p>
+
+                        @if (Model.Status == "1")
+                        {
+                            <span class="badge rounded-pill px-3 py-2 shadow-sm" style="background-color: #B8D8BA; color: #fff;">帳號狀態：🟢 正常</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill px-3 py-2 shadow-sm" style="background-color: #FFE5E5; color: #E63946;">帳號狀態：🔴 停權</span>
+                        }
+                    </div>
+
+                    <div class="bg-white p-4 rounded-4 shadow-sm text-start">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-5 text-muted fw-bold small">系統識別碼</div>
+                            <div class="col-7 text-secondary">@Model.MemberID</div>
+                        </div>
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-5 text-muted fw-bold small">管理員身分</div>
+                            <div class="col-7 text-secondary">
+                                @(Model.IsAdmin ? "👑 是" : "一般園丁")
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-5 text-muted fw-bold small">加入園地日期</div>
+                            <div class="col-7 text-secondary">
+                                @Model.RegisterDate.ToString("yyyy/MM/dd HH:mm")
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-footer bg-white border-top-0 p-4 d-flex justify-content-between align-items-center">
+                    <a href="javascript:history.back()" class="btn btn-light rounded-pill px-4 text-muted fw-bold shadow-sm smart-back-btn" data-fallback="/Members/Index">⬅️ 返回列表</a>
+                    <a asp-action="Edit" asp-route-id="@Model.MemberID" class="btn rounded-pill px-4 text-white fw-bold shadow-sm" style="background-color: #5C8A8A;">✏️ 調整狀態</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

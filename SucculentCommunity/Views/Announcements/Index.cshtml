@@ -1,0 +1,95 @@
+﻿@using X.PagedList.Mvc.Core
+@using X.PagedList
+@model IPagedList<SucculentCommunity.Models.Announcement>
+
+@{
+    ViewData["Title"] = "系統公告";
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+}
+
+<div class="container mt-4 mb-5 d-flex flex-column" style="min-height: calc(100vh - 220px);">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #5C8A8A;">📢 系統公告</h2>
+            <p class="text-muted small mb-0">掌握小肉肉園地的最新消息與活動</p>
+        </div>
+
+        @if (isAdmin)
+        {
+            <a asp-action="Create" class="btn rounded-pill px-4 text-white fw-bold shadow-sm" style="background-color: #B8D8BA;">
+                ➕ 發佈新公告
+            </a>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 rounded-4" style="background-color: #FAFAFA;">
+            <h4 class="text-muted mb-0">目前還沒有任何系統公告喔！</h4>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 g-3 mb-4">
+            @foreach (var item in Model)
+            {
+                <div class="col">
+                    <div class="card border-0 shadow-sm rounded-4" style="transition: transform 0.2s; cursor: pointer;"
+                         onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='/Announcements/Details/@item.AnnounceID'">
+
+                        <div class="card-body d-flex justify-content-between align-items-center p-4">
+                            <div class="flex-grow-1 pe-3">
+                                <span class="badge rounded-pill bg-light text-secondary border mb-2 px-2 py-1">
+                                    🗓️ @item.PostTime.ToString("yyyy/MM/dd")
+                                </span>
+                                <h5 class="card-title fw-bold mb-1" style="color: #4A6B6B;">@item.Title</h5>
+                            </div>
+
+                            @if (isAdmin)
+                            {
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <a asp-action="Edit" asp-route-id="@item.AnnounceID" class="btn btn-sm btn-outline-theme rounded-pill px-3 fw-bold" onclick="event.stopPropagation();">
+                                        ✏️ 編輯
+                                    </a>
+
+                                    <form asp-action="Delete" asp-route-id="@item.AnnounceID" method="post" onclick="event.stopPropagation();" onsubmit="return confirm('⚠️ 確定要刪除這則公告嗎？');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold">
+                                            🗑️ 刪除
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="custom-pagination mt-auto pt-4 pb-2 d-flex justify-content-center">
+            @Html.PagedListPager(Model, page => Url.Action("Index", new { page }), new PagedListRenderOptions {
+            LiElementClasses = new string[] { "page-item" },
+                PageClasses = new string[] { "page-link" },
+                LinkToPreviousPageFormat = "⬅️ 上一頁",
+                LinkToNextPageFormat = "下一頁 ➡️",
+                MaximumPageNumbersToDisplay = 5,
+                Display = PagedListDisplayMode.Always
+                })
+    </div>
+        }
+</div>
+
+<style>
+    /* 🌟 專屬主題色編輯按鈕樣式 (滑鼠移入填滿) */
+    .btn-outline-theme {
+        color: #5C8A8A;
+        border: 1px solid #5C8A8A;
+        background-color: #fff;
+    }
+
+        .btn-outline-theme:hover {
+            color: #fff;
+            background-color: #5C8A8A;
+        }
+</style>

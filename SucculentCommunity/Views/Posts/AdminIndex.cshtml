@@ -1,0 +1,146 @@
+﻿@using X.PagedList.Mvc.Core
+@using X.PagedList
+@model IPagedList<SucculentCommunity.Models.Post>
+
+@{
+    ViewData["Title"] = "貼文管理";
+}
+
+<div class="container mt-4 mb-5 d-flex flex-column" style="min-height: calc(100vh - 220px);">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #5C8A8A;">🛡️ 貼文管理 (後台)</h2>
+            <p class="text-muted small mb-0">管理員專屬的社群內容審查中心</p>
+        </div>
+
+        <form asp-action="AdminIndex" method="get" class="d-flex">
+            <input type="text" name="searchString" class="form-control rounded-pill me-2 border-1 bg-white shadow-sm" placeholder="🔍 搜尋貼文標題或發文者..." style="width: 250px;" value="@ViewData["CurrentFilter"]">
+            <button type="submit" class="btn rounded-pill fw-bold shadow-sm text-white" style="background-color: #B8D8BA;">搜尋</button>
+        </form>
+    </div>
+
+    <form asp-action="DeleteMultiple" method="post" id="bulkDeleteForm">
+        <div class="table-responsive shadow-sm rounded-4 bg-white p-4 mb-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm" onclick="confirmBulkDelete()">
+                    🗑️ 一鍵刪除所選
+                </button>
+                <span class="text-muted small fw-bold">共 @Model.TotalItemCount 篇貼文</span>
+            </div>
+
+            <table class="table table-hover align-middle mb-0 border-0">
+                <thead class="text-secondary" style="border-bottom: 2px solid #E6F2F2;">
+                    <tr>
+                        <th class="border-0" style="width: 50px;">
+                            <input class="form-check-input shadow-sm" type="checkbox" id="selectAll" style="transform: scale(1.2); cursor: pointer;">
+                        </th>
+                        <th class="border-0">類型</th>
+                        <th class="border-0">貼文標題</th>
+                        <th class="border-0">發文者</th>
+                        <th class="border-0">發佈時間</th>
+                        <th class="border-0 text-center">單筆操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="border-light">
+                                <input class="form-check-input shadow-sm post-checkbox" type="checkbox" name="postIds" value="@item.PostID" style="transform: scale(1.2); cursor: pointer;">
+                            </td>
+                            <td class="border-light">
+                                @if (item.PostType == "1")
+                                {
+                                    <span class="badge rounded-pill bg-warning text-dark px-2 py-1">❓ 發問</span>
+                                }
+                                else if (item.PostType == "2")
+                                {
+                                    <span class="badge rounded-pill px-2 py-1" style="background-color: #B8D8BA; color: #fff;">📖 日誌</span>
+                                }
+                                else if (item.PostType == "3")
+                                {
+                                    <span class="badge rounded-pill bg-info text-white px-2 py-1">✨ 心得</span>
+                                }
+                            </td>
+                            <td class="border-light fw-bold text-secondary text-truncate" style="max-width: 200px;">
+                                <a href="/Posts/Details/@item.PostID" class="text-decoration-none" style="color: #4A6B6B;">@item.PostTitle</a>
+                            </td>
+                            <td class="border-light">
+                                @{
+                                    var avatar = string.IsNullOrEmpty(item.Member?.Avatar) ? "default.jpg" : item.Member.Avatar;
+                                }
+                                <img src="~/images/avatars/@avatar" class="rounded-circle shadow-sm me-1" style="width: 25px; height: 25px; object-fit: cover;" />
+                                @item.Member?.Nickname
+                            </td>
+                            <td class="border-light text-muted small">
+                                @item.CreatedTime.ToString("yyyy/MM/dd HH:mm")
+                            </td>
+                            <td class="border-light text-center">
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold shadow-sm" onclick="singleDelete(@item.PostID)">
+                                    刪除
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 text-muted">目前沒有任何貼文資料。</div>
+            }
+        </div>
+    </form>
+
+    <div class="custom-pagination mt-auto pt-2 pb-4 d-flex justify-content-center">
+        @Html.PagedListPager(Model, page => Url.Action("AdminIndex", new { 
+            page, 
+            searchString = ViewData["CurrentFilter"]
+        }), new PagedListRenderOptions {
+            LiElementClasses = new string[] { "page-item" },
+            PageClasses = new string[] { "page-link" },
+            LinkToPreviousPageFormat = "⬅️ 上一頁",
+            LinkToNextPageFormat = "下一頁 ➡️",
+            MaximumPageNumbersToDisplay = 5,
+            Display = PagedListDisplayMode.Always // 🌟 永遠顯示分頁列
+        })
+    </div>
+</div>
+
+<form id="singleDeleteForm" asp-action="Delete" method="post" class="d-none">
+    <input type="hidden" name="id" id="singleDeleteId" value="" />
+</form>
+
+@section Scripts {
+    <script>
+        // 🌟 1. 「全選 / 取消全選」的連動邏輯
+        document.getElementById('selectAll').addEventListener('change', function() {
+            let checkboxes = document.querySelectorAll('.post-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+
+        // 🌟 2. 「一鍵刪除所選」的防呆與確認邏輯
+        function confirmBulkDelete() {
+            let selected = document.querySelectorAll('.post-checkbox:checked');
+
+            if (selected.length === 0) {
+                alert('💡 報告管理員：請先勾選您想要刪除的貼文喔！');
+                return;
+            }
+
+            if (confirm(`⚠️ 確定要一口氣「強制刪除」這 ${selected.length} 篇貼文嗎？\n此操作無法復原！`)) {
+                // 送出外層的批次刪除表單
+                document.getElementById('bulkDeleteForm').submit();
+            }
+        }
+
+        // 🌟 3. 單筆刪除的 JavaScript 呼叫邏輯
+        function singleDelete(postId) {
+            if (confirm('⚠️ 管理員注意：確定要強制刪除這篇貼文嗎？（此操作無法復原）')) {
+                document.getElementById('singleDeleteId').value = postId;
+                document.getElementById('singleDeleteForm').submit();
+            }
+        }
+    </script>
+}

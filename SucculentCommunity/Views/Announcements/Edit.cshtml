@@ -1,0 +1,39 @@
+﻿@model SucculentCommunity.Models.Announcement
+@{
+    ViewData["Title"] = "編輯公告";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5" style="background-color: #FAFAFA;">
+                <h3 class="text-center fw-bold mb-4" style="color: #5C8A8A;">✏️ 編輯系統公告</h3>
+
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="AnnounceID" />
+                    <input type="hidden" asp-for="PostTime" />
+
+                    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+                        <div class="form-group mb-3">
+                            <label asp-for="Title" class="control-label fw-bold text-muted small mb-2">公告標題 *</label>
+                            <input asp-for="Title" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" required />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-group mb-2">
+                            <label asp-for="Content" class="control-label fw-bold text-muted small mb-2">公告內容 *</label>
+                            <textarea asp-for="Content" class="form-control border-0 bg-light shadow-sm p-3" rows="8" style="border-radius: 20px;" required></textarea>
+                            <span asp-validation-for="Content" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="javascript:history.back()" class="btn btn-light rounded-pill px-4 text-muted fw-bold shadow-sm smart-back-btn" data-fallback="/Announcements/Index">取消返回</a>
+                        <button type="submit" class="btn rounded-pill px-5 text-white fw-bold shadow-sm" style="background-color: #5C8A8A;">💾 儲存修改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

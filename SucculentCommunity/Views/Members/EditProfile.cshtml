@@ -1,0 +1,176 @@
+﻿@model SucculentCommunity.ViewModels.EditProfileVM
+
+@{
+    ViewData["Title"] = "編輯個人資料";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            @if (TempData["SuccessMsg"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show rounded-pill shadow-sm text-center fw-bold mb-4" role="alert">
+                    @TempData["SuccessMsg"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (ViewData["ErrorMsg"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show rounded-pill shadow-sm text-center fw-bold mb-4" role="alert">
+                    @ViewData["ErrorMsg"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5" style="background-color: #FAFAFA;">
+                <h3 class="text-center fw-bold mb-4" style="color: #5C8A8A;">⚙️ 編輯個人資料</h3>
+
+                <form asp-action="EditProfile" id="profileForm" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="ExistingAvatar" />
+                    <input type="hidden" asp-for="CroppedAvatar" id="croppedAvatar" />
+
+                    <div class="mb-4 text-center bg-white p-4 rounded-4 shadow-sm">
+                        @{
+                            var avatarImage = string.IsNullOrEmpty(Model.ExistingAvatar) ? "default.jpg" : Model.ExistingAvatar;
+                        }
+                        <img src="~/images/avatars/@avatarImage" id="avatarPreview" class="rounded-circle shadow-sm mb-3" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #E6F2F2; cursor: pointer;" alt="目前大頭照" onclick="document.getElementById('uploadAvatar').click();" />
+
+                        <label class="control-label fw-bold text-muted small mb-2 d-block">📸 點擊圖片換一張美美的大頭貼</label>
+                        <input type="file" id="uploadAvatar" class="form-control rounded-pill border-0 bg-light px-3 d-none" accept="image/*" />
+                    </div>
+
+                    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+                        <div class="form-group mb-3">
+                            <label class="control-label fw-bold text-muted small mb-1">登入帳號</label>
+                            <input type="text" value="@Model.Account" class="form-control rounded-pill border-0 bg-light shadow-sm px-3 text-secondary" disabled />
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="Nickname" class="control-label fw-bold text-muted small mb-1">園丁暱稱 *</label>
+                            <input asp-for="Nickname" class="form-control rounded-pill border-0 bg-white border px-3" />
+                            <span asp-validation-for="Nickname" class="text-danger small"></span>
+                        </div>
+
+                        <hr class="text-muted opacity-25 mb-4">
+                        <h6 class="fw-bold mb-3" style="color: #7A8C8A;">🔒 安全性設定 (若不修改密碼請留空)</h6>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="OldPassword" class="control-label fw-bold text-muted small mb-1"></label>
+                            <input asp-for="OldPassword" class="form-control rounded-pill border-0 bg-white border px-3" placeholder="請輸入原本的密碼..." />
+                            <span asp-validation-for="OldPassword" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="NewPassword" class="control-label fw-bold text-muted small mb-1"></label>
+                            <input asp-for="NewPassword" class="form-control rounded-pill border-0 bg-white border px-3" placeholder="請輸入新密碼..." />
+                            <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-group mb-2">
+                            <label asp-for="ConfirmNewPassword" class="control-label fw-bold text-muted small mb-1"></label>
+                            <input asp-for="ConfirmNewPassword" class="form-control rounded-pill border-0 bg-white border px-3" placeholder="請再次輸入新密碼..." />
+                            <span asp-validation-for="ConfirmNewPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="javascript:history.back()" class="btn btn-light rounded-pill px-4 text-muted fw-bold shadow-sm">取消返回</a>
+                        <button type="submit" class="btn rounded-pill px-5 text-white fw-bold shadow-sm" style="background-color: #5C8A8A;">💾 儲存修改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold" id="cropModalLabel" style="color: #5C8A8A;">✂️ 調整大頭貼</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div style="max-height: 400px; overflow: hidden;">
+                    <img id="imageToCrop" style="max-width: 100%; display: block;" />
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 justify-content-center">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn rounded-pill px-4 text-white fw-bold shadow-sm" id="cropBtn" style="background-color: #B8D8BA;">確定裁切</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+    <script>
+        let cropper;
+        const uploadInput = document.getElementById('uploadAvatar');
+        const imageToCrop = document.getElementById('imageToCrop');
+        const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+        const avatarPreview = document.getElementById('avatarPreview');
+        const croppedAvatarInput = document.getElementById('croppedAvatar');
+
+        // 當選擇檔案時觸發
+        uploadInput.addEventListener('change', function (e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    imageToCrop.src = event.target.result;
+                    cropModal.show();
+                };
+                reader.readAsDataURL(files[0]);
+            }
+            uploadInput.value = ''; // 清空 value 讓同檔名可以重複選
+        });
+
+        // 當 Modal 顯示時初始化 Cropper
+        document.getElementById('cropModal').addEventListener('shown.bs.modal', function () {
+            if (cropper) { cropper.destroy(); }
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: 1, // 1:1 正方形
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.8,
+                restore: false,
+                guides: false,
+                center: false,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
+        });
+
+        // 按下「確定裁切」按鈕
+        document.getElementById('cropBtn').addEventListener('click', function () {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 400,
+                    height: 400
+                });
+
+                const base64Image = canvas.toDataURL('image/jpeg', 0.9);
+
+                // 1. 把裁切好的圖給預覽框
+                avatarPreview.src = base64Image;
+                // 2. 把字串塞進隱藏欄位準備送給後端
+                croppedAvatarInput.value = base64Image;
+
+                cropModal.hide();
+            }
+        });
+    </script>
+}

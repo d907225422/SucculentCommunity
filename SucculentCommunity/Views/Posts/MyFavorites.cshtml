@@ -1,0 +1,330 @@
+﻿@using System.Text.RegularExpressions
+@model IEnumerable<SucculentCommunity.Models.Post>
+
+@{
+    ViewData["Title"] = "我的專屬收藏夾";
+    var favoriteSpecies = ViewBag.FavoriteSpecies as IEnumerable<SucculentCommunity.Models.Species> ?? new List<SucculentCommunity.Models.Species>();
+}
+
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #5C8A8A;">🔖 我的專屬收藏夾</h2>
+            <p class="text-muted small mb-0">這裡存放著所有你心動的肉肉與實用的養護筆記。</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a asp-controller="Species" asp-action="Index" class="btn rounded-pill px-4 fw-bold shadow-sm text-white" style="background-color: #B8D8BA; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                📚 探索圖鑑
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="btn rounded-pill px-4 fw-bold shadow-sm text-white" style="background-color: #5C8A8A; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                💬 逛動態牆
+            </a>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-4 justify-content-center gap-2 custom-tabs" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill fw-bold px-4 shadow-sm" id="pills-species-tab" data-bs-toggle="pill" data-bs-target="#pills-species" type="button" role="tab" aria-selected="true">
+                📚 多肉圖鑑 (@favoriteSpecies.Count())
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill fw-bold px-4 shadow-sm" id="pills-posts-tab" data-bs-toggle="pill" data-bs-target="#pills-posts" type="button" role="tab" aria-selected="false">
+                💬 社群貼文 (@Model.Count())
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+
+        <div class="tab-pane fade show active" id="pills-species" role="tabpanel" aria-labelledby="pills-species-tab">
+            @if (!favoriteSpecies.Any())
+            {
+                <div class="text-center p-5 rounded-4 border border-dashed" style="background-color: #FAFAFA; border-color: #B8D8BA !important; border-width: 2px !important;">
+                    <div class="mb-3" style="font-size: 3rem;">🪴</div>
+                    <h5 class="fw-bold mb-3" style="color: #4A6B6B;">您的圖鑑收藏目前空空如也喔...</h5>
+                    <p class="text-secondary mb-0">快點擊右上角的「📚 探索圖鑑」，把心動的品種收集起來吧！</p>
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+                    @foreach (var item in favoriteSpecies)
+                    {
+                        <div class="col" id="species-card-@item.SpeciesID">
+                            <div class="card h-100 shadow-sm border-0 rounded-4 position-relative overflow-hidden" style="cursor: pointer; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='/Species/Details/@item.SpeciesID'">
+                                <img src="~/images/species/@item.SpeciesImg" class="card-img-top" alt="@item.CommonName" style="height: 220px; object-fit: cover;">
+                                <div class="position-absolute" style="top: 12px; right: 12px;">
+
+                                    <button class="btn btn-sm rounded-circle shadow-sm toggle-species-fav-btn d-flex align-items-center justify-content-center" data-species-id="@item.SpeciesID" style="width: 36px; height: 36px; transition: all 0.2s; background-color: #FFBD9D; color: white; border: 1px solid #FFBD9D;" title="取消收藏" onclick="event.stopPropagation();">
+                                        <span class="species-fav-icon" style="font-size: 1rem;">🔖</span>
+                                    </button>
+                                </div>
+                                <div class="card-body text-center mt-3 pb-4">
+                                    <h5 class="card-title fw-bold mb-1" style="color: #4A6B6B;">@item.CommonName</h5>
+                                    <p class="small mb-3" style="font-style: italic; color: #9E9E9E;">@item.ScientificName</p>
+                                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                        <span class="badge rounded-pill shadow-sm px-3 py-2" style="background-color: #E6F2F2; color: #5C8A8A; font-weight: bold;">🌱 @item.Family</span>
+                                        <span class="badge rounded-pill shadow-sm px-3 py-2" style="background-color: #FFE5E5; color: #E63946; font-weight: bold;">☀️ @item.GrowthSeason</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="tab-pane fade" id="pills-posts" role="tabpanel" aria-labelledby="pills-posts-tab">
+            @if (!Model.Any())
+            {
+                <div class="text-center p-5 rounded-4 border border-dashed" style="background-color: #FAFAFA; border-color: #B8D8BA !important; border-width: 2px !important;">
+                    <div class="mb-3" style="font-size: 3rem;">🗂️</div>
+                    <h5 class="fw-bold mb-3" style="color: #4A6B6B;">您的收藏夾目前空空如也喔...</h5>
+                    <p class="text-secondary mb-0">快點擊右上角的「💬 逛動態牆」，把實用的養護心得收集起來吧！ 🌱</p>
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    @foreach (var item in Model)
+                    {
+                        string rawContent = item.PostContent ?? "";
+                        var tagRegex = new Regex(@"#\S+");
+                        var tags = tagRegex.Matches(rawContent).Select(m => m.Value).ToList();
+                        var cleanContent = tagRegex.Replace(rawContent, "").Trim();
+
+                        <div class="col" id="post-card-@item.PostID">
+                            <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column" style="transition: all 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='/Posts/Details/@item.PostID'">
+
+                                @if (!string.IsNullOrEmpty(item.PostImage))
+                                {
+                                    <img src="~/images/posts/@item.PostImage" class="card-img-top" style="height: 200px; object-fit: cover;" alt="貼文封面">
+                                }
+                                else
+                                {
+                                    <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background-color: #E6F2F2;">
+                                        <span class="fs-1 opacity-50">🪴</span>
+                                    </div>
+                                }
+
+                                <div class="card-body position-relative mt-2 flex-grow-1">
+                                    <div class="position-absolute top-0 start-0 translate-middle-y ms-3 d-flex gap-1">
+                                        @if (item.PostType == "1")
+                                        {
+                                            <span class="badge rounded-pill bg-warning text-dark shadow-sm px-2 py-1">❓ 舉手發問</span>
+                                        }
+                                        else if (item.PostType == "2")
+                                        {
+                                            <span class="badge rounded-pill shadow-sm px-2 py-1" style="background-color: #B8D8BA; color: #fff;">📖 多肉日誌</span>
+                                        }
+                                        else if (item.PostType == "3")
+                                        {
+                                            <span class="badge rounded-pill bg-info text-white shadow-sm px-2 py-1">✨ 養護心得</span>
+                                        }
+
+                                        @if (item.Plant != null)
+                                        {
+                                            <span class="badge rounded-pill bg-light text-secondary border shadow-sm px-2 py-1">
+                                                🌱 @item.Plant.PlantNickname
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <h5 class="card-title fw-bold mt-2 text-truncate" style="color: #4A6B6B;">@item.PostTitle</h5>
+
+                                    <p class="card-text text-secondary small mb-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                        @cleanContent
+                                    </p>
+
+                                    @if (tags.Any())
+                                    {
+                                        <div class="d-flex flex-wrap gap-1 mt-auto pt-2">
+                                            @foreach (var tag in tags)
+                                            {
+                                                <span class="badge rounded-pill shadow-sm" style="background-color: #F0F8FF; color: #5C8A8A; border: 1px solid #B8D8BA;">@tag</span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="card-footer bg-white border-0 pt-2 pb-3 d-flex justify-content-between align-items-center mt-auto">
+                                    <div class="d-flex align-items-center">
+                                        @{
+                                            var avatar = string.IsNullOrEmpty(item.Member?.Avatar) ? "default.jpg" : item.Member.Avatar;
+                                        }
+                                        <img src="~/images/avatars/@avatar" class="rounded-circle me-2" style="width: 25px; height: 25px; object-fit: cover;" />
+
+                                        <div>
+                                            <div class="small fw-bold" style="color: #5C8A8A; line-height: 1;">@item.Member?.Nickname</div>
+                                            <small class="text-muted" style="font-size: 0.7rem;">@item.CreatedTime.ToString("yyyy/MM/dd HH:mm")</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="text-muted small">
+                                            <span class="me-2">❤️ @(item.PostLikes?.Count ?? 0)</span>
+                                            <span>💬 @(item.Comments?.Count ?? 0)</span>
+                                        </div>
+                                        <button class="btn btn-sm rounded-circle shadow-sm toggle-fav-btn d-flex align-items-center justify-content-center" data-post-id="@item.PostID" style="width: 30px; height: 30px; transition: all 0.2s; background-color: #FFBD9D; color: white; border: 1px solid #FFBD9D;" title="取消收藏">
+                                            <span class="fav-icon" style="font-size: 0.85rem;">🔖</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 頁籤樣式 */
+    .custom-tabs .nav-link {
+        color: #5C8A8A;
+        background-color: #fff;
+        border: 2px solid #E6F2F2;
+    }
+
+        .custom-tabs .nav-link.active {
+            color: #fff !important;
+            background-color: #FFBD9D !important; /* 收藏夾專屬蜜桃色 */
+            border-color: #FFBD9D !important;
+        }
+</style>
+
+@section Scripts {
+    <script>
+        // 共用吐司訊息
+        function showToast(message, isSuccess = true) {
+            const alertBox = document.createElement('div');
+            alertBox.className = `alert alert-${isSuccess ? 'success' : 'danger'} rounded-pill text-center py-2 px-4 fw-bold shadow`;
+            alertBox.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; transition: opacity 0.5s ease;';
+            alertBox.innerText = message;
+            document.body.appendChild(alertBox);
+            setTimeout(() => {
+                alertBox.style.opacity = "0";
+                setTimeout(() => alertBox.remove(), 500);
+            }, 3000);
+        }
+
+        // ==========================================
+        // 🌟 1. 貼文收藏的 AJAX 邏輯
+        // ==========================================
+        document.querySelectorAll('.toggle-fav-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+
+                const postId = this.getAttribute('data-post-id');
+                const iconSpan = this.querySelector('.fav-icon');
+                const cardDiv = document.getElementById(`post-card-${postId}`);
+
+                this.style.transform = "scale(0.8)";
+                setTimeout(() => this.style.transform = "scale(1)", 150);
+
+                fetch(`/Posts/ToggleFavorite?postId=${postId}`, { method: 'POST' })
+                .then(res => {
+                    if (!res.ok) throw new Error("伺服器回應錯誤");
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        if (data.isFavorited) {
+                            this.classList.remove('bg-white');
+                            this.style.backgroundColor = '#FFBD9D';
+                            this.style.color = 'white';
+                            this.style.border = '1px solid #FFBD9D';
+                            iconSpan.innerText = '🔖';
+                            showToast('✅ 已重新加入收藏夾！', true);
+                            cardDiv.style.opacity = "1";
+                        } else {
+                            this.style.backgroundColor = '#fff';
+                            this.style.color = '#FFBD9D';
+                            this.style.border = '1px solid #FFBD9D';
+                            this.classList.add('bg-white');
+                            iconSpan.innerText = '⭐';
+                            showToast('✅ 已從收藏夾移除！', true);
+                            cardDiv.style.opacity = "0.4"; // 半透明防呆
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Fetch Error:", error);
+                    alert("操作發生異常：" + error.message);
+                });
+            });
+        });
+
+        // ==========================================
+        // 🌟 2. 圖鑑收藏的 AJAX 邏輯 (升級：同步 ⭐ 和 🔖 切換特效)
+        // ==========================================
+        document.querySelectorAll('.toggle-species-fav-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+
+                const speciesId = this.getAttribute('data-species-id');
+                const iconSpan = this.querySelector('.species-fav-icon');
+                const cardDiv = document.getElementById(`species-card-${speciesId}`);
+
+                this.style.transform = "scale(0.8)";
+                setTimeout(() => this.style.transform = "scale(1)", 150);
+
+                fetch(`/Species/ToggleFavorite?speciesId=${speciesId}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.isFavorited) {
+                            this.classList.remove('bg-white');
+                            this.style.backgroundColor = '#FFBD9D';
+                            this.style.color = 'white';
+                            this.style.border = '1px solid #FFBD9D';
+                            iconSpan.innerText = '🔖';
+                            showToast('✅ 已重新加入圖鑑收藏！', true);
+                            cardDiv.style.opacity = "1"; // 恢復不透明
+                        } else {
+                            this.style.backgroundColor = '#fff';
+                            this.style.color = '#FFBD9D';
+                            this.style.border = '1px solid #FFBD9D';
+                            this.classList.add('bg-white');
+                            iconSpan.innerText = '⭐';
+                            showToast('✅ 已從圖鑑收藏移除！', true);
+                            cardDiv.style.opacity = "0.4"; // 半透明防呆
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Fetch Error:", error);
+                    alert("操作發生異常：" + error.message);
+                });
+            });
+        });
+
+        // ==========================================
+        // 🌟 3. 記憶目前停留的頁籤 (URL Hash 魔法)
+        // ==========================================
+        const hash = window.location.hash;
+        if (hash) {
+            const targetTabBtn = document.querySelector(`button[data-bs-target="${hash}"]`);
+            if (targetTabBtn) {
+                const tab = new bootstrap.Tab(targetTabBtn);
+                tab.show();
+            }
+        }
+
+        const tabBtns = document.querySelectorAll('button[data-bs-toggle="pill"]');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('shown.bs.tab', function (event) {
+                const targetId = event.target.getAttribute('data-bs-target');
+                history.replaceState(null, null, targetId);
+            });
+        });
+    </script>
+}

@@ -1,0 +1,185 @@
+﻿@model SucculentCommunity.ViewModels.EditPostVM
+
+@{
+    ViewData["Title"] = "編輯貼文";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5" style="background-color: #FAFAFA;">
+                <h3 class="text-center fw-bold mb-4" style="color: #5C8A8A;">✏️ 編輯貼文</h3>
+
+                <form asp-action="Edit" enctype="multipart/form-data" id="editPostForm">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="PostID" />
+                    <input type="hidden" asp-for="ExistingImage" />
+
+                    <div class="bg-white p-4 rounded-4 shadow-sm mb-4 mx-0 border" style="border-color: #E6F2F2 !important;">
+                        <h6 class="fw-bold mb-3" style="color: #7A8C8A;">貼文設定</h6>
+                        <div class="d-flex gap-3 flex-wrap mb-3 border-bottom pb-3">
+                            <div class="form-check">
+                                <input class="form-check-input post-type-radio" type="radio" asp-for="PostType" value="2" id="typeDiary">
+                                <label class="form-check-label fw-bold text-secondary" for="typeDiary">📖 多肉日誌</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input post-type-radio" type="radio" asp-for="PostType" value="3" id="typeReview">
+                                <label class="form-check-label fw-bold text-secondary" for="typeReview">✨ 養護心得</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input post-type-radio" type="radio" asp-for="PostType" value="1" id="typeAsk">
+                                <label class="form-check-label fw-bold text-secondary" for="typeAsk">❓ 舉手發問</label>
+                            </div>
+                        </div>
+
+                        <div id="plantSection" class="form-group mb-2">
+                            <label asp-for="PlantID" class="control-label fw-bold text-muted small mb-1">更換關聯的植物</label>
+                            <select asp-for="PlantID" asp-items="ViewBag.PlantID" class="form-select rounded-pill border-0 bg-light shadow-sm px-3">
+                                <option value="">-- 無關聯植物 --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-4 shadow-sm mb-4 mx-0">
+                        <div class="form-group mb-3">
+                            <label asp-for="PostTitle" class="control-label fw-bold text-muted small mb-1">標題 *</label>
+                            <input asp-for="PostTitle" class="form-control rounded-pill border-0 bg-light shadow-sm px-3" />
+                            <span asp-validation-for="PostTitle" class="text-danger small"></span>
+                        </div>
+
+                        <div id="careTagsArea" class="mb-3 p-3 rounded-4" style="background-color: #F8F9FA; border: 1px dashed #B8D8BA;">
+                            <label class="control-label fw-bold text-muted small mb-2 d-block">✨ 加上專屬標籤 (可多選，儲存時會自動整理在文章末端喔！)</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill fw-bold care-tag-btn" data-tag="#💧澆水">💧 澆水</button>
+                                <button type="button" class="btn btn-sm btn-outline-warning rounded-pill fw-bold care-tag-btn" data-tag="#☀️日照">☀️ 日照</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill fw-bold care-tag-btn" data-tag="#🪨換盆換土">🪨 換盆</button>
+                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold care-tag-btn" data-tag="#💊施肥用藥">💊 施肥</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill fw-bold care-tag-btn" data-tag="#✂️修剪砍頭">✂️ 修剪</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill fw-bold care-tag-btn" data-tag="#📏測量生長">📏 測量</button>
+                                <button type="button" class="btn btn-sm btn-outline-dark rounded-pill fw-bold care-tag-btn" data-tag="#🐛病蟲害">🐛 病蟲害</button>
+                                <button type="button" class="btn btn-sm rounded-pill fw-bold care-tag-btn text-white" style="background-color: #FF758C; border-color: #FF758C;" data-tag="#🆘求救">🆘 求救</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="PostContent" class="control-label fw-bold text-muted small mb-1">內容 *</label>
+                            <textarea asp-for="PostContent" id="PostContent" class="form-control border-0 bg-light shadow-sm p-3" rows="8" style="border-radius: 20px;"></textarea>
+                            <span asp-validation-for="PostContent" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-group mb-3 bg-light p-3 rounded-4 border">
+                            @if (!string.IsNullOrEmpty(Model.ExistingImage))
+                            {
+                                <p class="fw-bold text-muted small mb-2">目前的照片：</p>
+                                <img src="~/images/posts/@Model.ExistingImage" class="rounded-3 shadow-sm mb-3" style="max-height: 150px; object-fit: cover;" />
+                            }
+
+                            <div class="mb-3 text-center d-none" id="previewContainer">
+                                <p class="fw-bold text-success small mb-2">預覽準備換上的新照片：</p>
+                                <img id="postImagePreview" src="#" class="rounded-4 shadow-sm" style="max-height: 150px; max-width: 100%; object-fit: cover; border: 3px solid #E6F2F2;" />
+                            </div>
+
+                            <label class="control-label fw-bold text-muted small mb-2 d-block">📸 更換照片 (若不換請留空)</label>
+                            <input type="file" name="UploadImage" id="uploadImage" class="form-control rounded-pill border-0 bg-white px-3 shadow-sm" accept="image/*" />
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label class="control-label fw-bold text-muted small mb-2 me-2">隱私設定：</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="IsPublic" value="1" id="publicYes">
+                                <label class="form-check-label small" for="publicYes">🌍 公開分享</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="IsPublic" value="0" id="publicNo">
+                                <label class="form-check-label small" for="publicNo">🔒 僅限自己</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="#" class="btn btn-light rounded-pill px-4 text-muted fw-bold shadow-sm smart-back-btn" data-fallback="/Posts/Details/@Model.PostID">取消返回</a>
+                        <button type="submit" class="btn rounded-pill px-5 text-white fw-bold shadow-sm" style="background-color: #5C8A8A;">💾 儲存修改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 讓求救按鈕被選中時有更明顯的特效 */
+    .care-tag-btn.active[data-tag="#🆘求救"] {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+    }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            // 初始化：如果一開始是選發問，就隱藏植物區塊
+            if ($("input[name='PostType']:checked").val() === '1') {
+                $('#plantSection').hide();
+            }
+
+            // 監聽類別切換
+            $('.post-type-radio').change(function () {
+                if ($(this).val() === '1') {
+                    $('#plantSection').slideUp(300);
+                } else {
+                    $('#plantSection').slideDown(300);
+                }
+            });
+
+            // ==========================================
+            // 🌟 魔法：點擊「養護標籤」變色 (多選按鈕)
+            // ==========================================
+            $('.care-tag-btn').click(function() {
+                $(this).toggleClass('active');
+                $(this).css("transform", "scale(0.9)");
+                setTimeout(() => $(this).css("transform", "scale(1)"), 150);
+            });
+
+            // 🚀 送出表單前：自動把有亮起來的標籤收集起來，加到文章末尾！
+            $('#editPostForm').submit(function() {
+                let activeTags = [];
+                $('.care-tag-btn.active').each(function() {
+                    activeTags.push($(this).data('tag'));
+                });
+
+                if (activeTags.length > 0) {
+                    let contentBox = $('#PostContent');
+                    let currentContent = contentBox.val();
+                    let tagsString = activeTags.join(' ');
+
+                    // 防呆：確認還沒被加過標籤，才加在最後面
+                    if (!currentContent.endsWith(tagsString)) {
+                        contentBox.val(currentContent + "\n\n" + tagsString);
+                    }
+                }
+            });
+
+            // ==========================================
+            // 🌟 魔法：上傳圖片即時預覽功能
+            // ==========================================
+            $('#uploadImage').change(function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        $('#postImagePreview').attr('src', event.target.result);
+                        $('#previewContainer').removeClass('d-none');
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#postImagePreview').attr('src', '#');
+                    $('#previewContainer').addClass('d-none');
+                }
+            });
+        });
+    </script>
+}

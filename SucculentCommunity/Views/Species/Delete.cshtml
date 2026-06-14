@@ -1,0 +1,40 @@
+﻿@model SucculentCommunity.Models.Species
+
+@{
+    ViewData["Title"] = "刪除圖鑑";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 text-center" style="background-color: #FFF0F0;">
+
+                <h3 class="fw-bold mb-3 text-danger">⚠️ 確定要刪除這個品種嗎？</h3>
+                <p class="text-muted small mb-4">刪除後將無法復原喔！(若已有園丁種植此品種，系統將會安全阻擋刪除)</p>
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger rounded-pill fw-bold text-center small mb-4 shadow-sm">
+                        @TempData["ErrorMessage"]
+                    </div>
+                }
+
+                <div class="mb-4 bg-white p-4 rounded-4 shadow-sm mx-3">
+                    <img src="~/images/species/@Model.SpeciesImg" class="rounded-circle shadow-sm mb-3" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #FFE4E1;" />
+                    <h4 class="fw-bold mb-1" style="color: #5C8A8A;">@Model.CommonName</h4>
+                    <p class="text-muted small mb-0">代碼：@Model.SpeciesID</p>
+                    <p class="text-secondary small mt-2 mb-0">@Model.Family</p>
+                </div>
+
+                <form asp-action="Delete">
+                    <input type="hidden" asp-for="SpeciesID" />
+                    <div class="d-flex justify-content-center gap-3">
+                        <a asp-action="Index" class="btn btn-light rounded-pill px-4 text-muted fw-bold shadow-sm">取消返回</a>
+                        <input type="submit" value="🗑️ 確認刪除" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" />
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
